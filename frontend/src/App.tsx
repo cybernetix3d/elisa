@@ -5,19 +5,11 @@ import MissionControl from './components/MissionControl/MissionControl';
 import BottomBar from './components/BottomBar/BottomBar';
 import GoButton from './components/shared/GoButton';
 import { useWebSocket } from './hooks/useWebSocket';
-import type { UIState, WSEvent } from './types';
+import { useBuildSession } from './hooks/useBuildSession';
 
 export default function App() {
-  const [uiState, setUiState] = useState<UIState>('design');
   const [spec, setSpec] = useState<ProjectSpec | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [events, setEvents] = useState<WSEvent[]>([]);
-
-  const handleEvent = useCallback((event: WSEvent) => {
-    setEvents((prev) => [...prev, event]);
-    if (event.type === 'build_complete') setUiState('done');
-  }, []);
-
+  const { uiState, tasks, agents, events, sessionId, handleEvent, startBuild } = useBuildSession();
   const { connected } = useWebSocket({ sessionId, onEvent: handleEvent });
 
   const handleWorkspaceChange = useCallback((json: Record<string, unknown>) => {
@@ -26,21 +18,7 @@ export default function App() {
 
   const handleGo = async () => {
     if (!spec) return;
-    setUiState('building');
-    setEvents([]);
-
-    const res = await fetch('/api/sessions', { method: 'POST' });
-    const { session_id } = await res.json();
-    setSessionId(session_id);
-
-    // Small delay to let WebSocket connect before starting
-    await new Promise((r) => setTimeout(r, 500));
-
-    await fetch(`/api/sessions/${session_id}/start`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ spec }),
-    });
+    await startBuild(spec);
   };
 
   return (
@@ -73,7 +51,7 @@ export default function App() {
 
         {/* Right: Mission Control */}
         <div className="w-80 border-l border-gray-200 bg-white overflow-y-auto">
-          <MissionControl spec={spec} events={events} uiState={uiState} />
+          <MissionControl spec={spec} tasks={tasks} agents={agents} events={events} uiState={uiState} />
         </div>
       </div>
 

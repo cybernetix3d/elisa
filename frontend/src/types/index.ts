@@ -7,6 +7,7 @@ export interface Task {
   status: 'pending' | 'in_progress' | 'done' | 'failed';
   agent_name: string;
   dependencies: string[];
+  acceptance_criteria?: string[];
 }
 
 export interface Agent {
@@ -26,21 +27,16 @@ export interface BuildSession {
 export type WSEvent =
   | { type: 'session_started'; session_id: string }
   | { type: 'planning_started' }
-  | { type: 'plan_ready'; tasks: Task[] }
-  | { type: 'task_started'; task: Task }
-  | { type: 'task_completed'; task: Task }
-  | { type: 'task_failed'; task: Task; error: string }
-  | { type: 'agent_spawned'; agent: Agent }
+  | { type: 'plan_ready'; tasks: Task[]; agents: Agent[]; explanation: string }
+  | { type: 'task_started'; task_id: string; agent_name: string }
+  | { type: 'task_completed'; task_id: string; summary: string }
+  | { type: 'task_failed'; task_id: string; error: string; retry_count: number }
+  | { type: 'agent_output'; task_id: string; agent_name: string; content: string }
   | { type: 'agent_status'; agent: Agent }
   | { type: 'agent_message'; agent_name: string; message: string }
-  | { type: 'code_generated'; task_id: string; file_path: string; preview: string }
-  | { type: 'code_review_started'; task_id: string }
-  | { type: 'code_review_complete'; task_id: string; approved: boolean; comments: string[] }
-  | { type: 'test_started'; task_id: string }
-  | { type: 'test_result'; task_id: string; passed: boolean; output: string }
   | { type: 'deploy_started'; target: string }
   | { type: 'deploy_progress'; target: string; message: string }
   | { type: 'deploy_complete'; target: string; url?: string }
   | { type: 'teaching_moment'; concept: string; explanation: string }
-  | { type: 'error'; message: string }
-  | { type: 'build_complete'; summary: string };
+  | { type: 'error'; message: string; recoverable: boolean }
+  | { type: 'session_complete'; summary: string };

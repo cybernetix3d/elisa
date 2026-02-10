@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.models.session import BuildSession, SessionState
+from app.services.orchestrator import Orchestrator
 
 
 class ConnectionManager:
@@ -32,6 +33,7 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 sessions: dict[str, BuildSession] = {}
+running_tasks: dict[str, asyncio.Task] = {}
 
 
 @asynccontextmanager
@@ -83,33 +85,42 @@ async def start_session(session_id: str, req: StartRequest):
     session.state = SessionState.planning
     session.spec = req.spec
 
-    asyncio.create_task(_run_mock_planning(session_id))
+    orchestrator = Orchestrator(
+        session=session,
+        send_event=lambda evt: manager.send_event(session_id, evt),
+    )
+
+    task = asyncio.create_task(orchestrator.run(req.spec))
+    running_tasks[session_id] = task
 
     return {"status": "started"}
 
 
-async def _run_mock_planning(session_id: str) -> None:
-    await manager.send_event(session_id, {"type": "planning_started"})
-    await asyncio.sleep(1)
+@app.post("/api/sessions/{session_id}/stop")
+async def stop_session(session_id: str):
+    session = sessions.get(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    task = running_tasks.pop(session_id, None)
+    if task and not task.done():
+        task.cancel()
+
+    session.state = SessionState.done
     await manager.send_event(
         session_id,
-        {
-            "type": "plan_ready",
-            "tasks": [
-                {
-                    "id": "task-1",
-                    "name": "Set up project",
-                    "description": "Initialize the project structure",
-                    "status": "pending",
-                    "agent_name": "Builder",
-                    "dependencies": [],
-                }
-            ],
-        },
+        {"type": "error", "message": "Build stopped by user", "recoverable": False},
     )
+
+    return {"status": "stopped"}
+
+
+@app.get("/api/sessions/{session_id}/tasks")
+async def get_session_tasks(session_id: str):
     session = sessions.get(session_id)
-    if session:
-        session.state = SessionState.executing
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return session.tasks
 
 
 @app.get("/api/templates")

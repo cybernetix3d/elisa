@@ -24,7 +24,7 @@ Do NOT update docs for internal implementation changes that don't affect the str
 ## Tech Stack
 
 - **Frontend**: React 19, Vite 7, TypeScript 5.9, Tailwind CSS 4, Blockly 12
-- **Backend**: Express 5, TypeScript 5.9, ws 8, Claude Code CLI
+- **Backend**: Express 5, TypeScript 5.9, ws 8, Claude Agent SDK (`@anthropic-ai/claude-agent-sdk`)
 - **Hardware**: MicroPython on ESP32 via serialport + mpremote
 - **Testing**: Vitest + Testing Library (frontend), Vitest (backend)
 
@@ -49,6 +49,6 @@ No bug fix is complete without a regression test.
 ## Conventions
 
 - No database. All session state is in-memory.
-- Each agent task runs as a separate `claude` CLI subprocess.
+- Each agent task runs via the Claude Agent SDK's `query()` API.
 - Frontend communicates via REST (commands) + WebSocket (events).
 - Blockly workspace -> NuggetSpec JSON -> backend orchestration pipeline.

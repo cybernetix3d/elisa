@@ -1,11 +1,11 @@
 # Backend Module
 
-Express 5 + TypeScript server. Orchestrates AI agent teams via Claude Code CLI subprocesses. Streams results to frontend over WebSocket.
+Express 5 + TypeScript server. Orchestrates AI agent teams via the Claude Agent SDK. Streams results to frontend over WebSocket.
 
 ## Stack
 
 - Express 5, TypeScript 5.9, Node.js (ES modules)
-- ws 8 (WebSocket), simple-git 3, serialport 12, @anthropic-ai/sdk
+- ws 8 (WebSocket), simple-git 3, serialport 12, @anthropic-ai/sdk, @anthropic-ai/claude-agent-sdk
 - archiver 7 (zip streaming for nugget export)
 - Vitest (tests)
 
@@ -18,7 +18,7 @@ src/
     session.ts           Type definitions: Session, Task, Agent, BuildPhase, WSEvent
   services/
     orchestrator.ts      Central pipeline: plan -> execute -> test -> review -> deploy
-    agentRunner.ts       Spawns claude CLI as subprocess, parses stream-json output
+    agentRunner.ts       Runs agents via SDK query() API, streams output
     metaPlanner.ts       Calls Claude API to decompose NuggetSpec into task DAG
     gitService.ts        Git init, commit per task, diff tracking
     hardwareService.ts   ESP32 detect, compile, flash, serial monitor
@@ -34,7 +34,6 @@ src/
     dag.ts               Task DAG with Kahn's topological sort, cycle detection
     contextManager.ts    Builds file manifests, nugget context, state snapshots for agents
     tokenTracker.ts      Tracks input/output tokens and cost per agent
-    which.ts             Cross-platform PATH resolution for CLI tools
 ```
 
 ## API Surface
@@ -42,7 +41,7 @@ src/
 ### REST Endpoints
 | Method | Path | Purpose |
 |--------|------|---------|
-| GET | /api/health | Readiness check (API key + CLI status) |
+| GET | /api/health | Readiness check (API key + SDK status) |
 | POST | /api/sessions | Create session |
 | POST | /api/sessions/:id/start | Start build with NuggetSpec |
 | POST | /api/sessions/:id/stop | Cancel build |
@@ -62,7 +61,7 @@ src/
 ## Key Patterns
 
 - **In-memory only**: Sessions stored in `Map<string, Session>`. No database.
-- **Subprocess per task**: Each agent task spawns `claude` CLI with `--output-format stream-json --permission-mode bypassPermissions --max-turns 20`
+- **SDK query per task**: Each agent task calls `query()` from `@anthropic-ai/claude-agent-sdk` with `permissionMode: 'bypassPermissions'`, `maxTurns: 20`
 - **Context chain**: After each task, summary written to `.elisa/context/nugget_context.md` in workspace. Next agent reads it.
 - **Graceful degradation**: Missing external tools (git, pytest, mpremote) produce warnings, not crashes.
 - **Timeouts**: Agent=300s, Tests=120s, Flash=60s. Task retry limit=2.
@@ -71,4 +70,4 @@ src/
 
 - Port: `process.env.PORT` (default 8000)
 - CORS: `http://localhost:5173`
-- Claude models: opus (agents via CLI), claude-opus-4-6 (meta-planner via API), claude-sonnet-4 (teaching via API)
+- Claude models: claude-opus-4-6 (agents via SDK + meta-planner via API), claude-sonnet-4 (teaching via API)

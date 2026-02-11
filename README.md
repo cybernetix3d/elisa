@@ -60,7 +60,7 @@ Browser (React SPA)  <──REST + WebSocket──>  Express Server
                                       HardwareService, TeachingEngine
 ```
 
-Each agent runs as an isolated `claude` CLI subprocess. No database -- all session state is in-memory. See [ARCHITECTURE.md](ARCHITECTURE.md) for the full system design.
+Each agent runs as an isolated SDK `query()` call. No database -- all session state is in-memory. See [ARCHITECTURE.md](ARCHITECTURE.md) for the full system design.
 
 ## Project Structure
 
@@ -76,7 +76,7 @@ elisa/
   backend/           Express + WebSocket server
     src/services/
       orchestrator   Build pipeline controller
-      agentRunner    Claude CLI subprocess manager
+      agentRunner    Claude Agent SDK runner
       metaPlanner    ProjectSpec -> task DAG decomposition
       gitService     Per-session git repo management
       testRunner     pytest execution and coverage parsing

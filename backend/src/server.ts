@@ -1,11 +1,11 @@
 /** Express + WebSocket server -- replaces FastAPI main.py. */
 
+import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'node:http';
 import fs from 'node:fs';
-import { execFileSync } from 'node:child_process';
 import archiver from 'archiver';
 import Anthropic from '@anthropic-ai/sdk';
 import type { BuildSession, SessionState } from './models/session.js';
@@ -13,7 +13,6 @@ import { Orchestrator } from './services/orchestrator.js';
 import { HardwareService } from './services/hardwareService.js';
 import { AgentRunner } from './services/agentRunner.js';
 import { SkillRunner } from './services/skillRunner.js';
-import { which } from './utils/which.js';
 
 // -- State --
 
@@ -28,26 +27,21 @@ const hardwareService = new HardwareService();
 interface HealthStatus {
   apiKey: 'valid' | 'invalid' | 'missing' | 'unchecked';
   apiKeyError?: string;
-  claudeCli: 'available' | 'not_found';
-  claudeCliVersion?: string;
+  agentSdk: 'available' | 'not_found';
 }
 
 const healthStatus: HealthStatus = {
   apiKey: 'unchecked',
-  claudeCli: 'not_found',
+  agentSdk: 'not_found',
 };
 
 async function validateStartupHealth(): Promise<void> {
-  // Check Claude CLI
-  const claudePath = which('claude');
-  if (claudePath) {
-    healthStatus.claudeCli = 'available';
-    try {
-      const version = execFileSync(claudePath, ['--version'], { encoding: 'utf-8', timeout: 5000 }).trim();
-      healthStatus.claudeCliVersion = version;
-    } catch {
-      // CLI found but --version failed; still mark as available
-    }
+  // Check Agent SDK
+  try {
+    await import('@anthropic-ai/claude-agent-sdk');
+    healthStatus.agentSdk = 'available';
+  } catch {
+    healthStatus.agentSdk = 'not_found';
   }
 
   // Check API key
@@ -115,13 +109,12 @@ app.use((_req, res, next) => {
 
 // Health
 app.get('/api/health', (_req, res) => {
-  const ready = healthStatus.apiKey === 'valid' && healthStatus.claudeCli === 'available';
+  const ready = healthStatus.apiKey === 'valid' && healthStatus.agentSdk === 'available';
   res.json({
     status: ready ? 'ready' : 'degraded',
     apiKey: healthStatus.apiKey,
     apiKeyError: healthStatus.apiKeyError,
-    claudeCli: healthStatus.claudeCli,
-    claudeCliVersion: healthStatus.claudeCliVersion,
+    agentSdk: healthStatus.agentSdk,
   });
 });
 
@@ -409,6 +402,6 @@ const PORT = Number(process.env.PORT ?? 8000);
 server.listen(PORT, () => {
   console.log(`Elisa backend listening on port ${PORT}`);
   validateStartupHealth().then(() => {
-    console.log(`Health: API key=${healthStatus.apiKey}, CLI=${healthStatus.claudeCli}`);
+    console.log(`Health: API key=${healthStatus.apiKey}, SDK=${healthStatus.agentSdk}`);
   });
 });

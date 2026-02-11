@@ -4,8 +4,7 @@ export interface HealthStatus {
   status: 'ready' | 'degraded' | 'offline';
   apiKey: 'valid' | 'invalid' | 'missing' | 'unchecked';
   apiKeyError?: string;
-  claudeCli: 'available' | 'not_found';
-  claudeCliVersion?: string;
+  agentSdk: 'available' | 'not_found';
 }
 
 const POLL_INTERVAL = 30_000;
@@ -14,7 +13,7 @@ export function useHealthCheck(enabled: boolean) {
   const [health, setHealth] = useState<HealthStatus>({
     status: 'offline',
     apiKey: 'unchecked',
-    claudeCli: 'not_found',
+    agentSdk: 'not_found',
   });
   const [loading, setLoading] = useState(true);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -25,7 +24,7 @@ export function useHealthCheck(enabled: boolean) {
       const data = await res.json();
       setHealth(data as HealthStatus);
     } catch {
-      setHealth({ status: 'offline', apiKey: 'unchecked', claudeCli: 'not_found' });
+      setHealth({ status: 'offline', apiKey: 'unchecked', agentSdk: 'not_found' });
     } finally {
       setLoading(false);
     }

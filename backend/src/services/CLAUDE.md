@@ -7,8 +7,8 @@ Each service owns one concern. Orchestrator coordinates them all.
 ### orchestrator.ts (central controller)
 Runs the full build pipeline: plan -> execute -> test -> review -> deploy. Manages task state, human gates (Promise-based pause/resume), WebSocket event emission. Largest file in the backend (~22KB).
 
-### agentRunner.ts (subprocess manager)
-Spawns `claude` CLI as child process with `--output-format stream-json`. Parses newline-delimited JSON for `assistant` messages and `result` metadata. Extracts token counts and cost. 300s timeout, 2 retries on failure.
+### agentRunner.ts (SDK agent runner)
+Calls `query()` from `@anthropic-ai/claude-agent-sdk` to run agents programmatically. Streams `assistant` messages and extracts `result` metadata (tokens, cost). 300s timeout, 2 retries on failure.
 
 ### metaPlanner.ts (task decomposition)
 Calls Claude API (opus model) with NuggetSpec + system prompt. Returns structured task DAG with dependencies, acceptance criteria, and role assignments. Validates DAG for cycles. Retry on JSON parse failure.

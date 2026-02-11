@@ -254,6 +254,7 @@ export class Orchestrator {
           prompt: userPrompt,
           systemPrompt,
           onOutput: this.makeOutputHandler(agentName),
+          onQuestion: this.makeQuestionHandler(taskId),
           workingDir: this.nuggetDir,
           ...(mcpServers.length > 0 ? { mcpServers } : {}),
         });
@@ -805,6 +806,22 @@ export class Orchestrator {
         task_id: taskId,
         agent_name: agentName,
         content,
+      });
+    };
+  }
+
+  private makeQuestionHandler(
+    taskId: string,
+  ): (taskId: string, payload: Record<string, any>) => Promise<Record<string, any>> {
+    return async (_taskId: string, payload: Record<string, any>) => {
+      await this.send({
+        type: 'user_question',
+        event: 'user_question',
+        task_id: taskId,
+        payload,
+      });
+      return new Promise<Record<string, any>>((resolve) => {
+        this.questionResolvers.set(taskId, resolve);
       });
     };
   }

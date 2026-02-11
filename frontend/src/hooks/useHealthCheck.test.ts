@@ -13,8 +13,7 @@ describe('useHealthCheck', () => {
       json: () => Promise.resolve({
         status: 'ready',
         apiKey: 'valid',
-        claudeCli: 'available',
-        claudeCliVersion: '1.0.0',
+        agentSdk: 'available',
       }),
     }));
 
@@ -26,7 +25,7 @@ describe('useHealthCheck', () => {
 
     expect(result.current.health.status).toBe('ready');
     expect(result.current.health.apiKey).toBe('valid');
-    expect(result.current.health.claudeCli).toBe('available');
+    expect(result.current.health.agentSdk).toBe('available');
   });
 
   it('returns offline when fetch throws', async () => {
@@ -46,7 +45,7 @@ describe('useHealthCheck', () => {
       json: () => Promise.resolve({
         status: 'degraded',
         apiKey: 'missing',
-        claudeCli: 'available',
+        agentSdk: 'available',
       }),
     }));
 
@@ -65,7 +64,7 @@ describe('useHealthCheck', () => {
       json: () => Promise.resolve({
         status: 'ready',
         apiKey: 'valid',
-        claudeCli: 'available',
+        agentSdk: 'available',
       }),
     }));
 

@@ -1,20 +1,11 @@
-/** Runs individual AI agents via Claude Code CLI subprocess.
+/** Runs individual AI agents via the Claude Agent SDK.
  *
- * The Claude Code CLI is spawned as a child process with --output-format stream-json.
- * It streams JSON lines which are parsed for agent output, tool use, and results.
- *
- * For interactive questions: When the agent uses AskUserQuestion, the CLI pauses
- * and emits a tool_use event. The onQuestion callback relays the question to the
- * frontend via WebSocket. The user's answer is returned to resume the agent.
- *
- * NOTE: @anthropic-ai/claude-code is a CLI binary, not a programmatic SDK.
- * There is no query() or canUseTool callback. We use subprocess streaming.
+ * Uses the SDK's query() API to run agents programmatically. This eliminates
+ * all subprocess/shell issues (Windows .cmd wrappers, ENOENT, etc.) and
+ * provides native streaming, tool control, and permission management.
  */
 
-import { spawn } from 'node:child_process';
-import fs from 'node:fs';
-import path from 'node:path';
-import { which } from '../utils/which.js';
+import { query } from '@anthropic-ai/claude-agent-sdk';
 import type { AgentResult } from '../models/session.js';
 
 export interface AgentRunnerParams {
@@ -32,12 +23,6 @@ export interface AgentRunnerParams {
 }
 
 export class AgentRunner {
-  private claudePath: string;
-
-  constructor() {
-    this.claudePath = which('claude') ?? 'claude';
-  }
-
   async execute(params: AgentRunnerParams): Promise<AgentResult> {
     const {
       taskId,
@@ -49,35 +34,17 @@ export class AgentRunner {
       mcpServers,
     } = params;
 
-    const args = [
-      '-p', prompt,
-      '--output-format', 'stream-json',
-      '--append-system-prompt', systemPrompt,
-      '--model', 'opus',
-      '--permission-mode', 'bypassPermissions',
-      '--max-turns', '20',
-    ];
-
-    // Inject MCP server config if portals provide MCP servers
-    if (mcpServers && mcpServers.length > 0) {
-      const mcpConfig: Record<string, { command: string; args?: string[]; env?: Record<string, string> }> = {};
-      for (const server of mcpServers) {
-        mcpConfig[server.name] = {
-          command: server.command,
-          ...(server.args ? { args: server.args } : {}),
-          ...(server.env ? { env: server.env } : {}),
-        };
-      }
-      const configDir = path.join(workingDir, '.elisa');
-      fs.mkdirSync(configDir, { recursive: true });
-      const configPath = path.join(configDir, 'mcp-config.json');
-      fs.writeFileSync(configPath, JSON.stringify({ mcpServers: mcpConfig }, null, 2), 'utf-8');
-      args.push('--mcp-config', configPath);
-    }
+    const mcpConfig = mcpServers?.length
+      ? Object.fromEntries(mcpServers.map(s => [s.name, {
+          command: s.command,
+          ...(s.args ? { args: s.args } : {}),
+          ...(s.env ? { env: s.env } : {}),
+        }]))
+      : undefined;
 
     try {
       return await withTimeout(
-        this.runProcess(args, taskId, onOutput, workingDir),
+        this.runQuery(prompt, systemPrompt, workingDir, taskId, onOutput, mcpConfig),
         timeout * 1000,
       );
     } catch (err: any) {
@@ -85,15 +52,6 @@ export class AgentRunner {
         return {
           success: false,
           summary: `Agent timed out after ${timeout} seconds`,
-          costUsd: 0,
-          inputTokens: 0,
-          outputTokens: 0,
-        };
-      }
-      if (err.code === 'ENOENT') {
-        return {
-          success: false,
-          summary: "Claude CLI ('claude') not found. Is it installed and on PATH?",
           costUsd: 0,
           inputTokens: 0,
           outputTokens: 0,
@@ -109,110 +67,62 @@ export class AgentRunner {
     }
   }
 
-  private runProcess(
-    args: string[],
+  private async runQuery(
+    prompt: string,
+    systemPrompt: string,
+    cwd: string,
     taskId: string,
     onOutput: (taskId: string, content: string) => Promise<void>,
-    workingDir: string,
+    mcpConfig?: Record<string, any>,
   ): Promise<AgentResult> {
-    return new Promise((resolve, reject) => {
-      const proc = spawn(this.claudePath, args, {
-        cwd: workingDir,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-
-      const accumulatedText: string[] = [];
-      let costUsd = 0;
-      let inputTokens = 0;
-      let outputTokens = 0;
-      let finalResult = '';
-      let success = true;
-      let stderrChunks: Buffer[] = [];
-
-      proc.stderr?.on('data', (chunk: Buffer) => {
-        stderrChunks.push(chunk);
-      });
-
-      let lineBuf = '';
-      proc.stdout?.on('data', (chunk: Buffer) => {
-        lineBuf += chunk.toString('utf-8');
-        const lines = lineBuf.split('\n');
-        lineBuf = lines.pop() ?? '';
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed) continue;
-
-          let data: any;
-          try {
-            data = JSON.parse(trimmed);
-          } catch {
-            continue;
-          }
-
-          const msgType = data.type ?? '';
-
-          if (msgType === 'assistant') {
-            const message = data.message ?? {};
-            for (const block of message.content ?? []) {
-              if (block.type === 'text') {
-                accumulatedText.push(block.text);
-                onOutput(taskId, block.text).catch(() => {});
-              }
-            }
-          } else if (msgType === 'result') {
-            finalResult = data.result ?? '';
-            costUsd = data.cost_usd ?? 0;
-            inputTokens = data.input_tokens ?? data.input_tokens_used ?? 0;
-            outputTokens = data.output_tokens ?? data.output_tokens_used ?? 0;
-            if (data.subtype === 'error') {
-              success = false;
-              if (!finalResult) finalResult = data.error ?? 'Unknown error';
-            }
-          }
-        }
-      });
-
-      proc.on('error', reject);
-
-      proc.on('close', (code) => {
-        // Process remaining buffer
-        if (lineBuf.trim()) {
-          try {
-            const data = JSON.parse(lineBuf.trim());
-            if (data.type === 'result') {
-              finalResult = data.result ?? finalResult;
-              costUsd = data.cost_usd ?? costUsd;
-              inputTokens = data.input_tokens ?? data.input_tokens_used ?? inputTokens;
-              outputTokens = data.output_tokens ?? data.output_tokens_used ?? outputTokens;
-              if (data.subtype === 'error') {
-                success = false;
-                if (!finalResult) finalResult = data.error ?? 'Unknown error';
-              }
-            }
-          } catch {
-            // ignore
-          }
-        }
-
-        if (code !== 0 && success) {
-          success = false;
-          const stderr = Buffer.concat(stderrChunks).toString('utf-8').trim();
-          if (!finalResult) {
-            finalResult = stderr || `Process exited with code ${code}`;
-          }
-        }
-
-        const summary = finalResult || accumulatedText.slice(-3).join('\n') || 'No output';
-        resolve({
-          success,
-          summary,
-          costUsd,
-          inputTokens,
-          outputTokens,
-        });
-      });
+    const conversation = query({
+      prompt,
+      options: {
+        cwd,
+        model: 'claude-opus-4-6',
+        maxTurns: 20,
+        permissionMode: 'bypassPermissions',
+        allowDangerouslySkipPermissions: true,
+        systemPrompt,
+        ...(mcpConfig ? { mcpServers: mcpConfig } : {}),
+      },
     });
+
+    let costUsd = 0;
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let finalResult = '';
+    let success = true;
+    const accumulatedText: string[] = [];
+
+    for await (const message of conversation) {
+      if (message.type === 'assistant') {
+        for (const block of (message as any).message?.content ?? []) {
+          if (block.type === 'text') {
+            accumulatedText.push(block.text);
+            onOutput(taskId, block.text).catch(() => {});
+          }
+        }
+      }
+
+      if (message.type === 'result') {
+        const result = message as any;
+        costUsd = result.total_cost_usd ?? 0;
+        inputTokens = result.usage?.input_tokens ?? 0;
+        outputTokens = result.usage?.output_tokens ?? 0;
+
+        if (result.subtype === 'success') {
+          finalResult = result.result ?? '';
+        } else {
+          success = false;
+          const errors: string[] = result.errors ?? [];
+          finalResult = errors.join('; ') || 'Unknown error';
+        }
+      }
+    }
+
+    const summary = finalResult || accumulatedText.slice(-3).join('\n') || 'No output';
+    return { success, summary, costUsd, inputTokens, outputTokens };
   }
 }
 

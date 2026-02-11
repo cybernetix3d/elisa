@@ -23,7 +23,7 @@ src/
     shared/                  GoButton, HumanGateModal, QuestionModal, TeachingToast, AgentAvatar, ReadinessBadge
   hooks/
     useBuildSession.ts       All build session state (tasks, agents, commits, events, etc.)
-    useHealthCheck.ts        Polls /api/health for backend readiness (API key + CLI status)
+    useHealthCheck.ts        Polls /api/health for backend readiness (API key + SDK status)
     useWebSocket.ts          WebSocket connection with auto-reconnect (3s interval)
   lib/
     nuggetFile.ts            .elisa nugget file save/load utilities (JSZip-based)

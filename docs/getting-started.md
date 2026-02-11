@@ -7,7 +7,7 @@
 | Node.js | 20+ | Required |
 | npm | 10+ | Comes with Node.js |
 | `ANTHROPIC_API_KEY` | -- | Environment variable. Get one at [console.anthropic.com](https://console.anthropic.com) |
-| Claude CLI | Latest | `npm install -g @anthropic-ai/claude-code`. Agents spawn `claude` subprocesses. |
+| Claude Agent SDK | -- | Installed automatically via `npm install` in the backend. |
 | Python + pytest | 3.10+ | Optional. Only needed if builds include test tasks. |
 | ESP32 + mpremote | -- | Optional. Only needed for hardware deployment. `pip install mpremote` |
 
@@ -45,9 +45,7 @@ Open `http://localhost:5173` in your browser.
 
 **WebSocket disconnects** -- The frontend auto-reconnects. If the backend crashed, restart it and create a new session.
 
-**"claude" command not found** -- Install the Claude CLI globally: `npm install -g @anthropic-ai/claude-code`. The agent runner spawns it as a subprocess.
-
-**ESP32 not detected** -- Check USB connection. Supported chips: CP210x (Heltec WiFi LoRa 32 V3), ESP32-S3 Native USB, CH9102. Run `npx @anthropic-ai/claude-code` once to verify the CLI works before testing hardware flash.
+**ESP32 not detected** -- Check USB connection. Supported chips: CP210x (Heltec WiFi LoRa 32 V3), ESP32-S3 Native USB, CH9102.
 
 **Tests fail with "pytest not found"** -- Install Python and pytest: `pip install pytest pytest-cov`. The test runner calls `pytest tests/ -v --cov=src`.
 

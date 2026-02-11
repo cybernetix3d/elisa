@@ -7,7 +7,7 @@ interface ReadinessBadgeProps {
 
 function buildTooltip(health: HealthStatus): string {
   if (health.status === 'ready') {
-    return 'API key valid, Claude CLI available';
+    return 'API key valid, Agent SDK available';
   }
   if (health.status === 'offline') {
     return 'Backend not reachable';
@@ -16,7 +16,7 @@ function buildTooltip(health: HealthStatus): string {
   if (health.apiKey === 'missing') issues.push('API key not set');
   else if (health.apiKey === 'invalid') issues.push(`API key invalid: ${health.apiKeyError ?? 'unknown error'}`);
   else if (health.apiKey === 'unchecked') issues.push('API key not yet checked');
-  if (health.claudeCli === 'not_found') issues.push('Claude CLI not found');
+  if (health.agentSdk === 'not_found') issues.push('Agent SDK not found');
   return issues.join('; ');
 }
 

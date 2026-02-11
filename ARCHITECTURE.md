@@ -1,6 +1,6 @@
 # Elisa Architecture
 
-Elisa is a kid-friendly IDE that orchestrates AI agent teams to build real software and hardware nuggets. Kids compose nugget specs using visual blocks (Blockly); the backend decomposes specs into task DAGs, executes them via Claude Code CLI agents, and streams results back in real-time.
+Elisa is a kid-friendly IDE that orchestrates AI agent teams to build real software and hardware nuggets. Kids compose nugget specs using visual blocks (Blockly); the backend decomposes specs into task DAGs, executes them via the Claude Agent SDK, and streams results back in real-time.
 
 ## System Topology
 
@@ -19,8 +19,8 @@ frontend/ (React 19 + Vite)         backend/ (Express 5 + TypeScript)
 |  Teaching)            |           |  -> TeachingEngine         |
 +-----------------------+           +---------------------------+
                                               |
-                                    spawns claude CLI subprocess
-                                    per task (--output-format stream-json)
+                                    runs agents via SDK query() API
+                                    per task (async streaming)
 ```
 
 ## Monorepo Layout
@@ -43,9 +43,9 @@ No npm workspaces. Frontend and backend are independent Node.js projects.
 3. POST /api/sessions (create) -> POST /api/sessions/:id/start (with spec)
 4. Backend Orchestrator.run():
    a. PLAN:    MetaPlanner calls Claude API to decompose spec into task DAG
-   b. EXECUTE: Topological sort -> run ready tasks via AgentRunner (claude CLI)
+   b. EXECUTE: Topological sort -> run ready tasks via AgentRunner (SDK query())
                 Each agent gets: role prompt + task description + context from prior tasks
-                Agent output streams as JSON -> WebSocket events to frontend
+                Agent output streams via SDK -> WebSocket events to frontend
                 Git commit after each completed task
    c. TEST:    TestRunner executes pytest, parses results + coverage
    d. REVIEW:  Optional reviewer agent pass
@@ -83,7 +83,7 @@ In-memory state for one execution run. Tracks: session ID, phase, tasks, agents,
 - **Reviewer**: Reviews code quality
 - **Custom**: User-defined persona
 
-Each agent is a Claude Code CLI subprocess with role-specific system prompts injected from `backend/src/prompts/`.
+Each agent runs via the Claude Agent SDK's `query()` API with role-specific system prompts injected from `backend/src/prompts/`.
 
 ## State Machine
 
@@ -96,7 +96,7 @@ idle -> planning -> executing -> testing -> reviewing -> deploying -> done
 ## Key Patterns
 
 - **Event-driven UI**: All frontend state updates flow through WebSocket event handlers. No polling.
-- **Subprocess isolation**: Each agent task runs as a separate `claude` CLI process. No shared state between agents except via context summaries written to `.elisa/` in the workspace.
+- **Agent isolation**: Each agent task runs as a separate SDK `query()` call. No shared state between agents except via context summaries written to `.elisa/` in the workspace.
 - **Context chain**: After each task, a summary is written to `.elisa/context/nugget_context.md`. Subsequent agents receive this as input, creating a chain of context.
 - **Graceful degradation**: Missing tools (git, pytest, mpremote, serialport) cause warnings, not crashes.
 - **No auth**: Local-only development tool. CORS locked to localhost.

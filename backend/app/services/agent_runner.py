@@ -15,6 +15,8 @@ class AgentResult:
     success: bool
     summary: str
     cost_usd: float = 0.0
+    input_tokens: int = 0
+    output_tokens: int = 0
 
 
 class AgentRunner:
@@ -97,6 +99,8 @@ class AgentRunner:
 
         accumulated_text = []
         cost_usd = 0.0
+        input_tokens = 0
+        output_tokens = 0
         final_result = ""
         success = True
 
@@ -125,6 +129,8 @@ class AgentRunner:
                 elif msg_type == "result":
                     final_result = data.get("result", "")
                     cost_usd = data.get("cost_usd", 0.0)
+                    input_tokens = data.get("input_tokens", data.get("input_tokens_used", 0))
+                    output_tokens = data.get("output_tokens", data.get("output_tokens_used", 0))
                     subtype = data.get("subtype", "")
                     if subtype == "error":
                         success = False
@@ -148,4 +154,10 @@ class AgentRunner:
                 final_result = stderr_text or f"Process exited with code {process.returncode}"
 
         summary = final_result or "\n".join(accumulated_text[-3:]) or "No output"
-        return AgentResult(success=success, summary=summary, cost_usd=cost_usd)
+        return AgentResult(
+            success=success,
+            summary=summary,
+            cost_usd=cost_usd,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )

@@ -137,4 +137,86 @@ describe('useBuildSession', () => {
     act(() => result.current.handleEvent({ type: 'session_complete', summary: '' }));
     expect(result.current.events).toHaveLength(2);
   });
+
+  it('handles teaching_moment event', () => {
+    const { result } = renderHook(() => useBuildSession());
+    act(() => {
+      result.current.handleEvent({
+        type: 'teaching_moment',
+        concept: 'source_control',
+        headline: 'Saving work!',
+        explanation: 'Your helpers are saving.',
+        tell_me_more: 'More info here',
+      });
+    });
+    expect(result.current.teachingMoments).toHaveLength(1);
+    expect(result.current.teachingMoments[0].headline).toBe('Saving work!');
+    expect(result.current.teachingMoments[0].tell_me_more).toBe('More info here');
+  });
+
+  it('handles test_result event', () => {
+    const { result } = renderHook(() => useBuildSession());
+    act(() => {
+      result.current.handleEvent({
+        type: 'test_result',
+        test_name: 'test_add',
+        passed: true,
+        details: 'PASSED',
+      });
+    });
+    expect(result.current.testResults).toHaveLength(1);
+    expect(result.current.testResults[0].passed).toBe(true);
+  });
+
+  it('handles coverage_update event', () => {
+    const { result } = renderHook(() => useBuildSession());
+    act(() => {
+      result.current.handleEvent({
+        type: 'coverage_update',
+        percentage: 85.5,
+      });
+    });
+    expect(result.current.coveragePct).toBe(85.5);
+  });
+
+  it('handles token_usage event', () => {
+    const { result } = renderHook(() => useBuildSession());
+    act(() => {
+      result.current.handleEvent({
+        type: 'token_usage',
+        agent_name: 'Sparky',
+        input_tokens: 100,
+        output_tokens: 50,
+      });
+    });
+    expect(result.current.tokenUsage.input).toBe(100);
+    expect(result.current.tokenUsage.output).toBe(50);
+    expect(result.current.tokenUsage.total).toBe(150);
+    expect(result.current.tokenUsage.perAgent['Sparky']).toEqual({ input: 100, output: 50 });
+  });
+
+  it('accumulates token_usage across agents', () => {
+    const { result } = renderHook(() => useBuildSession());
+    act(() => {
+      result.current.handleEvent({
+        type: 'token_usage', agent_name: 'Sparky', input_tokens: 100, output_tokens: 50,
+      });
+    });
+    act(() => {
+      result.current.handleEvent({
+        type: 'token_usage', agent_name: 'Checkers', input_tokens: 200, output_tokens: 100,
+      });
+    });
+    expect(result.current.tokenUsage.total).toBe(450);
+    expect(result.current.tokenUsage.perAgent['Sparky']).toEqual({ input: 100, output: 50 });
+    expect(result.current.tokenUsage.perAgent['Checkers']).toEqual({ input: 200, output: 100 });
+  });
+
+  it('initializes new state correctly', () => {
+    const { result } = renderHook(() => useBuildSession());
+    expect(result.current.teachingMoments).toEqual([]);
+    expect(result.current.testResults).toEqual([]);
+    expect(result.current.coveragePct).toBeNull();
+    expect(result.current.tokenUsage).toEqual({ input: 0, output: 0, total: 0, perAgent: {} });
+  });
 });

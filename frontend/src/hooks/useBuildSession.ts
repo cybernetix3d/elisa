@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { ProjectSpec } from '../components/BlockCanvas/blockInterpreter';
-import type { UIState, Task, Agent, Commit, WSEvent } from '../types';
+import type { UIState, Task, Agent, Commit, WSEvent, TeachingMoment, TestResult, TokenUsage } from '../types';
 
 export function useBuildSession() {
   const [uiState, setUiState] = useState<UIState>('design');
@@ -9,6 +9,10 @@ export function useBuildSession() {
   const [commits, setCommits] = useState<Commit[]>([]);
   const [events, setEvents] = useState<WSEvent[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [teachingMoments, setTeachingMoments] = useState<TeachingMoment[]>([]);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [coveragePct, setCoveragePct] = useState<number | null>(null);
+  const [tokenUsage, setTokenUsage] = useState<TokenUsage>({ input: 0, output: 0, total: 0, perAgent: {} });
 
   const handleEvent = useCallback((event: WSEvent) => {
     setEvents(prev => [...prev, event]);
@@ -56,6 +60,44 @@ export function useBuildSession() {
         setUiState('done');
         setAgents(prev => prev.map(a => ({ ...a, status: 'done' as const })));
         break;
+      case 'teaching_moment':
+        setTeachingMoments(prev => [...prev, {
+          concept: event.concept,
+          headline: event.headline,
+          explanation: event.explanation,
+          tell_me_more: event.tell_me_more,
+          related_concepts: event.related_concepts,
+        }]);
+        break;
+      case 'test_result':
+        setTestResults(prev => [...prev, {
+          test_name: event.test_name,
+          passed: event.passed,
+          details: event.details,
+        }]);
+        break;
+      case 'coverage_update':
+        setCoveragePct(event.percentage);
+        break;
+      case 'token_usage':
+        setTokenUsage(prev => {
+          const newInput = prev.input + event.input_tokens;
+          const newOutput = prev.output + event.output_tokens;
+          const agentPrev = prev.perAgent[event.agent_name] || { input: 0, output: 0 };
+          return {
+            input: newInput,
+            output: newOutput,
+            total: newInput + newOutput,
+            perAgent: {
+              ...prev.perAgent,
+              [event.agent_name]: {
+                input: agentPrev.input + event.input_tokens,
+                output: agentPrev.output + event.output_tokens,
+              },
+            },
+          };
+        });
+        break;
     }
   }, []);
 
@@ -65,6 +107,10 @@ export function useBuildSession() {
     setTasks([]);
     setAgents([]);
     setCommits([]);
+    setTeachingMoments([]);
+    setTestResults([]);
+    setCoveragePct(null);
+    setTokenUsage({ input: 0, output: 0, total: 0, perAgent: {} });
 
     const res = await fetch('/api/sessions', { method: 'POST' });
     const { session_id } = await res.json();
@@ -80,5 +126,5 @@ export function useBuildSession() {
     });
   }, []);
 
-  return { uiState, tasks, agents, commits, events, sessionId, handleEvent, startBuild };
+  return { uiState, tasks, agents, commits, events, sessionId, teachingMoments, testResults, coveragePct, tokenUsage, handleEvent, startBuild };
 }

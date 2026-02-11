@@ -71,6 +71,22 @@ class TestGitEndpoint:
         assert isinstance(resp.json(), list)
 
 
+class TestTestsEndpoint:
+    async def test_tests_not_found(self, client):
+        resp = await client.get("/api/sessions/nonexistent/tests")
+        assert resp.status_code == 404
+
+    async def test_tests_empty_after_create(self, client):
+        resp = await client.post("/api/sessions")
+        sid = resp.json()["session_id"]
+        await client.post(
+            f"/api/sessions/{sid}/start",
+            json={"spec": {"project": {"goal": "test"}}},
+        )
+        resp = await client.get(f"/api/sessions/{sid}/tests")
+        assert resp.status_code == 200
+
+
 class TestTemplatesEndpoint:
     async def test_list_templates(self, client):
         resp = await client.get("/api/templates")

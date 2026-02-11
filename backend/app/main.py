@@ -133,6 +133,14 @@ async def get_session_git(session_id: str):
     return orch.get_commits()
 
 
+@app.get("/api/sessions/{session_id}/tests")
+async def get_session_tests(session_id: str):
+    orch = orchestrators.get(session_id)
+    if not orch:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return orch.get_test_results()
+
+
 @app.get("/api/templates")
 async def list_templates():
     return []

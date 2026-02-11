@@ -33,6 +33,33 @@ export interface Commit {
   files_changed: string[];
 }
 
+export interface TeachingMoment {
+  concept: string;
+  headline: string;
+  explanation: string;
+  tell_me_more?: string;
+  related_concepts?: string[];
+}
+
+export interface TestResult {
+  test_name: string;
+  passed: boolean;
+  details: string;
+}
+
+export interface CoverageReport {
+  total_statements: number;
+  covered_statements: number;
+  files: Record<string, { statements: number; covered: number; percentage: number }>;
+}
+
+export interface TokenUsage {
+  input: number;
+  output: number;
+  total: number;
+  perAgent: Record<string, { input: number; output: number }>;
+}
+
 export type WSEvent =
   | { type: 'session_started'; session_id: string }
   | { type: 'planning_started' }
@@ -42,11 +69,14 @@ export type WSEvent =
   | { type: 'task_failed'; task_id: string; error: string; retry_count: number }
   | { type: 'agent_output'; task_id: string; agent_name: string; content: string }
   | { type: 'agent_status'; agent: Agent }
-  | { type: 'agent_message'; agent_name: string; message: string }
+  | { type: 'agent_message'; from: string; to: string; content: string }
   | { type: 'deploy_started'; target: string }
   | { type: 'deploy_progress'; target: string; message: string }
   | { type: 'deploy_complete'; target: string; url?: string }
-  | { type: 'teaching_moment'; concept: string; explanation: string }
+  | { type: 'teaching_moment'; concept: string; headline: string; explanation: string; tell_me_more?: string; related_concepts?: string[] }
   | { type: 'commit_created'; sha: string; message: string; agent_name: string; task_id: string; timestamp: string; files_changed: string[] }
+  | { type: 'test_result'; test_name: string; passed: boolean; details: string }
+  | { type: 'coverage_update'; percentage: number; details?: CoverageReport }
+  | { type: 'token_usage'; agent_name: string; input_tokens: number; output_tokens: number }
   | { type: 'error'; message: string; recoverable: boolean }
   | { type: 'session_complete'; summary: string };

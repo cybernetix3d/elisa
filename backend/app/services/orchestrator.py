@@ -12,8 +12,11 @@ from app.prompts import builder_agent, tester_agent, reviewer_agent
 from app.services.agent_runner import AgentRunner
 from app.services.git_service import GitService, CommitInfo
 from app.services.meta_planner import MetaPlanner
+from app.services.teaching_engine import TeachingEngine
+from app.services.test_runner import TestRunner
 from app.utils.context_manager import ContextManager
 from app.utils.dag import TaskDAG
+from app.utils.token_tracker import TokenTracker
 
 logger = logging.getLogger(__name__)
 
@@ -46,12 +49,18 @@ class Orchestrator:
         self._git: GitService | None = GitService()
         self._context = ContextManager()
         self._commits: list[CommitInfo] = []
+        self._token_tracker = TokenTracker()
+        self._teaching_engine = TeachingEngine()
+        self._test_runner = TestRunner()
+        self._project_type: str = "software"
+        self._test_results: dict = {}
 
     async def run(self, spec: dict) -> None:
         """Execute the full build pipeline for a session."""
         try:
             await self._plan(spec)
             await self._execute()
+            await self._run_tests()
             await self._complete()
         except Exception as e:
             logger.exception("Orchestrator error")
@@ -65,6 +74,11 @@ class Orchestrator:
         """Call meta-planner and build the task DAG."""
         self._session.state = SessionState.planning
         await self._send({"type": "planning_started"})
+
+        # Derive project type from spec (Gap 12)
+        self._project_type = (
+            (self._session.spec or {}).get("project", {}).get("type", "software")
+        )
 
         plan = await self._meta_planner.plan(spec)
 
@@ -95,12 +109,17 @@ class Orchestrator:
         self._session.tasks = self._tasks
         self._session.agents = self._agents
 
+        plan_explanation = plan.get("plan_explanation", "")
+
         await self._send({
             "type": "plan_ready",
             "tasks": self._tasks,
             "agents": self._agents,
-            "explanation": plan.get("plan_explanation", ""),
+            "explanation": plan_explanation,
         })
+
+        # Teaching moment for task decomposition
+        await self._maybe_teach("plan_ready", plan_explanation)
 
     async def _execute(self) -> None:
         """Execute tasks in dependency order."""
@@ -196,6 +215,18 @@ class Orchestrator:
                             "content": f"Retrying... (attempt {retry_count + 1})",
                         })
 
+            # Track tokens regardless of success/failure
+            if result:
+                self._token_tracker.add_for_agent(
+                    agent_name, result.input_tokens, result.output_tokens, result.cost_usd
+                )
+                await self._send({
+                    "type": "token_usage",
+                    "agent_name": agent_name,
+                    "input_tokens": result.input_tokens,
+                    "output_tokens": result.output_tokens,
+                })
+
             if success:
                 task["status"] = "done"
                 if agent:
@@ -211,6 +242,15 @@ class Orchestrator:
                             self._task_summaries[task_id] = f.read()
                     except Exception:
                         pass
+
+                # Emit agent_message with PRD-correct shape
+                if task_id in self._task_summaries:
+                    await self._send({
+                        "type": "agent_message",
+                        "from": agent_name,
+                        "to": "team",
+                        "content": self._task_summaries[task_id][:500],
+                    })
 
                 # Update project_context.md
                 context_path = os.path.join(
@@ -248,6 +288,8 @@ class Orchestrator:
                                 "timestamp": commit_info.timestamp,
                                 "files_changed": commit_info.files_changed,
                             })
+                            # Teaching moment for source control
+                            await self._maybe_teach("commit_created", commit_msg)
                     except Exception:
                         logger.warning("Git commit failed for %s", task_id, exc_info=True)
 
@@ -256,6 +298,14 @@ class Orchestrator:
                     "task_id": task_id,
                     "summary": result.summary if result else "",
                 })
+
+                # Teaching moments for tester/reviewer completion (Gap 5, 13)
+                if agent_role == "tester":
+                    summary = result.summary if result else ""
+                    await self._maybe_teach("tester_task_completed", summary)
+                elif agent_role == "reviewer":
+                    summary = result.summary if result else ""
+                    await self._maybe_teach("reviewer_task_completed", summary)
             else:
                 task["status"] = "failed"
                 if agent:
@@ -274,6 +324,33 @@ class Orchestrator:
 
             completed.add(task_id)
 
+    async def _run_tests(self) -> None:
+        """Run tests on the generated project."""
+        self._session.state = SessionState.testing
+        results = await self._test_runner.run_tests(self._project_dir)
+        self._test_results = results
+
+        for test in results.get("tests", []):
+            await self._send({
+                "type": "test_result",
+                "test_name": test["test_name"],
+                "passed": test["passed"],
+                "details": test["details"],
+            })
+
+        if results.get("coverage_pct") is not None:
+            await self._send({
+                "type": "coverage_update",
+                "percentage": results["coverage_pct"],
+                "details": results.get("coverage_details", {}),
+            })
+            await self._maybe_teach("coverage_update", f"{results['coverage_pct']}% coverage")
+
+        if results["total"] > 0:
+            summary = f"{results['passed']}/{results['total']} tests passing"
+            event_type = "test_result_pass" if results["failed"] == 0 else "test_result_fail"
+            await self._maybe_teach(event_type, summary)
+
     async def _complete(self) -> None:
         """Mark session as done and send completion event."""
         self._session.state = SessionState.done
@@ -288,10 +365,25 @@ class Orchestrator:
         if failed_count:
             summary_parts.append(f"{failed_count} task(s) failed.")
 
+        # Include teaching summary (Gap 7)
+        shown = self._teaching_engine.get_shown_concepts()
+        if shown:
+            concept_names = [c.split(":")[0] for c in shown]
+            unique_concepts = list(dict.fromkeys(concept_names))
+            summary_parts.append(f"Concepts learned: {', '.join(unique_concepts)}")
+
         await self._send({
             "type": "session_complete",
             "summary": " ".join(summary_parts),
         })
+
+    async def _maybe_teach(self, event_type: str, event_details: str = "") -> None:
+        """Emit a teaching moment if one is appropriate for this event."""
+        moment = await self._teaching_engine.get_moment(
+            event_type, event_details, self._project_type
+        )
+        if moment:
+            await self._send({"type": "teaching_moment", **moment})
 
     def _setup_workspace(self) -> None:
         """Create project workspace directories and init git repo."""
@@ -331,6 +423,10 @@ class Orchestrator:
             }
             for c in self._commits
         ]
+
+    def get_test_results(self) -> dict:
+        """Return test results for REST endpoint."""
+        return self._test_results
 
     def _make_output_handler(
         self, agent_name: str

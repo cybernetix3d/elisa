@@ -1,73 +1,67 @@
-# React + TypeScript + Vite
+# Elisa Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite + Blockly SPA. The visual editor and build monitoring interface.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 19.2, TypeScript 5.9, Vite 7.3
+- Tailwind CSS 4
+- Blockly 12.3 (block editor)
+- @xyflow/react 12.10 (task DAG visualization)
 
-## React Compiler
+## Dev Commands
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev          # Start dev server (port 5173, proxies /api and /ws to localhost:8000)
+npm run build        # Type-check + production build
+npm run lint         # ESLint
+npm run test         # Vitest (single run)
+npm run test:watch   # Vitest (watch mode)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Structure
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+  components/
+    BlockCanvas/         Blockly workspace
+      BlockCanvas.tsx      Editor wrapper (read-only during builds)
+      blockDefinitions.ts  All 25 block type definitions
+      blockInterpreter.ts  Workspace -> ProjectSpec JSON conversion
+      toolbox.ts           Palette categories and block ordering
+    MissionControl/      Right sidebar (w-80)
+      MissionControl.tsx   Container with tabs/panels
+      TaskDAG.tsx          @xyflow/react dependency graph
+      CommsFeed.tsx        Scrolling agent message log
+      MetricsPanel.tsx     Token usage bars per agent
+    BottomBar/           Bottom panel (h-32, 4 tabs)
+      BottomBar.tsx        Tab container
+      GitTimeline.tsx      Commit list with file diffs
+      TestResults.tsx      Pass/fail list + coverage bar
+      BoardOutput.tsx      ESP32 serial output stream
+      TeachingSidebar.tsx  Teaching moments list
+    shared/              Reusable UI components
+      GoButton.tsx         Floating build trigger
+      HumanGateModal.tsx   Approval/reject modal
+      QuestionModal.tsx    Multi-choice agent question modal
+      TeachingToast.tsx    Floating notification
+      AgentAvatar.tsx      Status dot + role icon
+    Skills/
+      SkillsRulesModal.tsx CRUD editor for skills and rules
+  hooks/
+    useBuildSession.ts   WebSocket connection + session state
+  App.tsx                Root layout, all top-level state (useState)
+```
+
+## State Management
+
+No state library. All state lives in `App.tsx` via `useState` and is passed down as props. The `useBuildSession` hook manages the WebSocket connection and dispatches incoming events to state setters.
+
+UI state machine: `design` -> `building` -> `review` -> `deploy` -> `done`
+
+## Adding a New Block Type
+
+1. Define the block in `BlockCanvas/blockDefinitions.ts` following existing patterns (colour, fields, connections).
+2. Add it to the appropriate category in `BlockCanvas/toolbox.ts`.
+3. Add interpretation logic in `BlockCanvas/blockInterpreter.ts` to map it into `ProjectSpec`.
+4. Rebuild and test -- the block appears in the palette automatically.

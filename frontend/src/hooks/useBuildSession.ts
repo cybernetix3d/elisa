@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { ProjectSpec } from '../components/BlockCanvas/blockInterpreter';
-import type { UIState, Task, Agent, Commit, WSEvent, TeachingMoment, TestResult, TokenUsage } from '../types';
+import type { UIState, Task, Agent, Commit, WSEvent, TeachingMoment, TestResult, TokenUsage, QuestionPayload } from '../types';
 
 export interface SerialLine {
   line: string;
@@ -18,6 +18,11 @@ export interface GateRequest {
   context: string;
 }
 
+export interface QuestionRequest {
+  task_id: string;
+  questions: QuestionPayload[];
+}
+
 export function useBuildSession() {
   const [uiState, setUiState] = useState<UIState>('design');
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -32,6 +37,7 @@ export function useBuildSession() {
   const [serialLines, setSerialLines] = useState<SerialLine[]>([]);
   const [deployProgress, setDeployProgress] = useState<DeployProgress | null>(null);
   const [gateRequest, setGateRequest] = useState<GateRequest | null>(null);
+  const [questionRequest, setQuestionRequest] = useState<QuestionRequest | null>(null);
 
   const handleEvent = useCallback((event: WSEvent) => {
     setEvents(prev => [...prev, event]);
@@ -92,6 +98,9 @@ export function useBuildSession() {
         setUiState('review');
         setGateRequest({ task_id: event.task_id, question: event.question, context: event.context });
         break;
+      case 'user_question':
+        setQuestionRequest({ task_id: event.task_id, questions: event.questions });
+        break;
       case 'session_complete':
         setUiState('done');
         setAgents(prev => prev.map(a => ({ ...a, status: 'done' as const })));
@@ -150,6 +159,7 @@ export function useBuildSession() {
     setSerialLines([]);
     setDeployProgress(null);
     setGateRequest(null);
+    setQuestionRequest(null);
 
     const res = await fetch('/api/sessions', { method: 'POST' });
     const { session_id } = await res.json();
@@ -169,10 +179,14 @@ export function useBuildSession() {
     setGateRequest(null);
   }, []);
 
+  const clearQuestionRequest = useCallback(() => {
+    setQuestionRequest(null);
+  }, []);
+
   return {
     uiState, tasks, agents, commits, events, sessionId,
     teachingMoments, testResults, coveragePct, tokenUsage,
-    serialLines, deployProgress, gateRequest,
-    handleEvent, startBuild, clearGateRequest,
+    serialLines, deployProgress, gateRequest, questionRequest,
+    handleEvent, startBuild, clearGateRequest, clearQuestionRequest,
   };
 }

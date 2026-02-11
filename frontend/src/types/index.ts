@@ -60,6 +60,13 @@ export interface TokenUsage {
   perAgent: Record<string, { input: number; output: number }>;
 }
 
+export interface QuestionPayload {
+  question: string;
+  header: string;
+  options: Array<{ label: string; description: string }>;
+  multiSelect: boolean;
+}
+
 export type WSEvent =
   | { type: 'session_started'; session_id: string }
   | { type: 'planning_started' }
@@ -80,5 +87,6 @@ export type WSEvent =
   | { type: 'token_usage'; agent_name: string; input_tokens: number; output_tokens: number }
   | { type: 'serial_data'; line: string; timestamp: string }
   | { type: 'human_gate'; task_id: string; question: string; context: string }
+  | { type: 'user_question'; task_id: string; questions: QuestionPayload[] }
   | { type: 'error'; message: string; recoverable: boolean }
   | { type: 'session_complete'; summary: string };

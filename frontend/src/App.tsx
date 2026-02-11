@@ -6,6 +6,7 @@ import BottomBar from './components/BottomBar/BottomBar';
 import GoButton from './components/shared/GoButton';
 import TeachingToast from './components/shared/TeachingToast';
 import HumanGateModal from './components/shared/HumanGateModal';
+import QuestionModal from './components/shared/QuestionModal';
 import SkillsRulesModal from './components/Skills/SkillsRulesModal';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useBuildSession } from './hooks/useBuildSession';
@@ -17,8 +18,8 @@ export default function App() {
   const {
     uiState, tasks, agents, commits, events, sessionId,
     teachingMoments, testResults, coveragePct, tokenUsage,
-    serialLines, deployProgress, gateRequest,
-    handleEvent, startBuild, clearGateRequest,
+    serialLines, deployProgress, gateRequest, questionRequest,
+    handleEvent, startBuild, clearGateRequest, clearQuestionRequest,
   } = useBuildSession();
   const { connected } = useWebSocket({ sessionId, onEvent: handleEvent });
 
@@ -115,6 +116,16 @@ export default function App() {
           context={gateRequest.context}
           sessionId={sessionId}
           onClose={clearGateRequest}
+        />
+      )}
+
+      {/* Question modal */}
+      {questionRequest && sessionId && (
+        <QuestionModal
+          taskId={questionRequest.task_id}
+          questions={questionRequest.questions}
+          sessionId={sessionId}
+          onClose={clearQuestionRequest}
         />
       )}
 

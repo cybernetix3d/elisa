@@ -1,0 +1,28 @@
+{
+  "name": "elisa-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-code": "latest",
+    "@anthropic-ai/sdk": "latest",
+    "express": "^5",
+    "simple-git": "^3",
+    "serialport": "^12",
+    "ws": "^8",
+    "zod": "^3"
+  },
+  "devDependencies": {
+    "@types/express": "^5",
+    "@types/ws": "^8",
+    "tsx": "^4",
+    "typescript": "~5.9",
+    "vitest": "^4"
+  }
+}

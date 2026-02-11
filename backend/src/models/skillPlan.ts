@@ -1,19 +1,4 @@
-export interface Skill {
-  id: string;
-  name: string;
-  prompt: string;
-  category: 'agent' | 'feature' | 'style' | 'composite';
-  workspace?: Record<string, unknown>;
-}
-
-export interface Rule {
-  id: string;
-  name: string;
-  prompt: string;
-  trigger: 'always' | 'on_task_complete' | 'on_test_fail' | 'before_deploy';
-}
-
-// -- Composable Skill Plan types --
+/** Shared types for composable skill plans -- mirrors frontend/src/components/Skills/types.ts */
 
 export interface AskUserStep {
   id: string;
@@ -71,4 +56,17 @@ export interface SkillPlan {
   skillId: string;
   skillName: string;
   steps: SkillStep[];
+}
+
+export interface SkillContext {
+  entries: Record<string, string | string[]>;
+  parentContext?: SkillContext;
+}
+
+export interface SkillSpec {
+  id: string;
+  name: string;
+  prompt: string;
+  category: string;
+  workspace?: Record<string, unknown>;
 }

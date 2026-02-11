@@ -35,7 +35,7 @@ export interface ProjectSpec {
     flow_hints?: Array<{ type: 'sequential' | 'parallel'; descriptions: string[] }>;
     iteration_conditions?: string[];
   };
-  skills?: Array<{ id: string; name: string; prompt: string; category: string }>;
+  skills?: Array<{ id: string; name: string; prompt: string; category: string; workspace?: Record<string, unknown> }>;
   rules?: Array<{ id: string; name: string; prompt: string; trigger: string }>;
   portals?: Array<{
     id: string;
@@ -265,7 +265,13 @@ export function interpretWorkspace(
           const skill = skills.find(s => s.id === skillId);
           if (skill) {
             if (!spec.skills) spec.skills = [];
-            spec.skills.push({ id: skill.id, name: skill.name, prompt: skill.prompt, category: skill.category });
+            const entry: { id: string; name: string; prompt: string; category: string; workspace?: Record<string, unknown> } = {
+              id: skill.id, name: skill.name, prompt: skill.prompt, category: skill.category,
+            };
+            if (skill.category === 'composite' && skill.workspace) {
+              entry.workspace = skill.workspace;
+            }
+            spec.skills.push(entry);
           }
         }
         break;

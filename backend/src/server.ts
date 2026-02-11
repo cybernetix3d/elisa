@@ -9,12 +9,15 @@ import archiver from 'archiver';
 import type { BuildSession, SessionState } from './models/session.js';
 import { Orchestrator } from './services/orchestrator.js';
 import { HardwareService } from './services/hardwareService.js';
+import { AgentRunner } from './services/agentRunner.js';
+import { SkillRunner } from './services/skillRunner.js';
 
 // -- State --
 
 const sessions = new Map<string, BuildSession>();
 const orchestrators = new Map<string, Orchestrator>();
 const runningTasks = new Map<string, { cancel: () => void }>();
+const skillRunners = new Map<string, SkillRunner>();
 const hardwareService = new HardwareService();
 
 // -- WebSocket Connection Manager --
@@ -91,13 +94,34 @@ app.get('/api/sessions/:id', (req, res) => {
 });
 
 // Start session
-app.post('/api/sessions/:id/start', (req, res) => {
+app.post('/api/sessions/:id/start', async (req, res) => {
   const session = sessions.get(req.params.id);
   if (!session) { res.status(404).json({ detail: 'Session not found' }); return; }
 
   const spec = req.body.spec;
   session.state = 'planning';
   session.spec = spec;
+
+  // Pre-execute composite skills: flatten them into simple agent skills
+  if (spec.skills?.length) {
+    const sendEvent = (evt: Record<string, any>) => manager.sendEvent(req.params.id, evt);
+    const agentRunner = new AgentRunner();
+
+    for (const skill of spec.skills) {
+      if (skill.category === 'composite' && skill.workspace) {
+        try {
+          const runner = new SkillRunner(sendEvent, spec.skills, agentRunner);
+          const plan = runner['interpretWorkspaceOnBackend'](skill);
+          const result = await runner.execute(plan);
+          skill.prompt = result;
+          skill.category = 'agent';
+        } catch (err: any) {
+          console.warn(`Failed to pre-execute composite skill "${skill.name}":`, err.message);
+          // Keep the skill as-is; orchestrator will use its prompt/description
+        }
+      }
+    }
+  }
 
   const orchestrator = new Orchestrator(
     session,
@@ -242,6 +266,49 @@ app.post('/api/portals/:id/test', async (req, res) => {
   } else {
     res.json({ success: true, message: 'Connection test not yet implemented for this mechanism.' });
   }
+});
+
+// -- Skill Execution --
+
+// Start standalone skill execution
+app.post('/api/skills/run', (req, res) => {
+  const { plan, allSkills } = req.body;
+  if (!plan) { res.status(400).json({ detail: 'plan is required' }); return; }
+
+  const sessionId = randomUUID();
+  sessions.set(sessionId, {
+    id: sessionId,
+    state: 'executing',
+    spec: null,
+    tasks: [],
+    agents: [],
+  });
+
+  const agentRunner = new AgentRunner();
+  const runner = new SkillRunner(
+    (evt) => manager.sendEvent(sessionId, evt),
+    allSkills ?? [],
+    agentRunner,
+  );
+  skillRunners.set(sessionId, runner);
+
+  // Run async
+  runner.execute(plan).catch((err) => {
+    console.error('SkillRunner error:', err);
+  }).finally(() => {
+    const session = sessions.get(sessionId);
+    if (session) session.state = 'done';
+  });
+
+  res.json({ session_id: sessionId });
+});
+
+// Answer a skill's ask_user question
+app.post('/api/skills/:sessionId/answer', (req, res) => {
+  const runner = skillRunners.get(req.params.sessionId);
+  if (!runner) { res.status(404).json({ detail: 'Skill session not found' }); return; }
+  runner.respondToQuestion(req.body.step_id, req.body.answers ?? {});
+  res.json({ status: 'ok' });
 });
 
 // Hardware detect

@@ -143,6 +143,21 @@ export function useBuildSession() {
           };
         });
         break;
+      // Skill execution events (within a build session)
+      case 'skill_started':
+      case 'skill_step':
+      case 'skill_output':
+      case 'skill_completed':
+      case 'skill_error':
+        // Logged to events array above; no additional state updates needed for build
+        break;
+      case 'skill_question':
+        // During build, skill questions route through the same question modal
+        setQuestionRequest({
+          task_id: event.step_id,
+          questions: event.questions,
+        });
+        break;
     }
   }, []);
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Skill, Rule } from './types';
+import SkillFlowEditor from './SkillFlowEditor';
 
 interface Props {
   skills: Skill[];
@@ -13,6 +14,7 @@ const SKILL_PLACEHOLDERS: Record<Skill['category'], string> = {
   agent: 'Tell this agent how to behave. Example: Always explain your code with comments that a 10-year-old can understand.',
   feature: 'Describe what this feature should do in detail. Example: The game should have a score counter in the top-right corner...',
   style: 'Describe the style you want. Example: Use bright neon colors on a dark background with smooth animations.',
+  composite: 'Composite skills are built visually using the Flow Editor.',
 };
 
 const RULE_PLACEHOLDERS: Record<Rule['trigger'], string> = {
@@ -26,6 +28,7 @@ const SKILL_CATEGORIES: Array<{ label: string; value: Skill['category'] }> = [
   { label: 'Agent behavior', value: 'agent' },
   { label: 'Feature details', value: 'feature' },
   { label: 'Style details', value: 'style' },
+  { label: 'Composite flow', value: 'composite' },
 ];
 
 const RULE_TRIGGERS: Array<{ label: string; value: Rule['trigger'] }> = [
@@ -43,6 +46,7 @@ export default function SkillsRulesModal({ skills, rules, onSkillsChange, onRule
   const [activeTab, setActiveTab] = useState<'skills' | 'rules'>('skills');
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [editingRule, setEditingRule] = useState<Rule | null>(null);
+  const [flowEditorSkill, setFlowEditorSkill] = useState<Skill | null>(null);
 
   const handleCreateSkill = () => {
     setEditingSkill({ id: generateId(), name: '', prompt: '', category: 'agent' });
@@ -86,6 +90,25 @@ export default function SkillsRulesModal({ skills, rules, onSkillsChange, onRule
     if (editingRule?.id === id) setEditingRule(null);
   };
 
+  const handleFlowEditorSave = (workspace: Record<string, unknown>) => {
+    if (!flowEditorSkill) return;
+    const updated: Skill = { ...flowEditorSkill, workspace };
+    handleSaveSkill(updated);
+    setFlowEditorSkill(null);
+  };
+
+  // Show the flow editor overlay if a composite skill is being edited visually
+  if (flowEditorSkill) {
+    return (
+      <SkillFlowEditor
+        skill={flowEditorSkill}
+        allSkills={skills}
+        onSave={handleFlowEditorSave}
+        onClose={() => setFlowEditorSkill(null)}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
       <div className="bg-white rounded-xl shadow-2xl p-6 max-w-lg mx-4 w-full max-h-[80vh] flex flex-col">
@@ -123,7 +146,13 @@ export default function SkillsRulesModal({ skills, rules, onSkillsChange, onRule
                 <div key={skill.id} className="border border-gray-200 rounded-lg p-3 mb-2 flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm">{skill.name || '(unnamed)'}</div>
-                    <div className="text-xs text-gray-500 mt-1">{skill.category} -- {skill.prompt.slice(0, 80)}{skill.prompt.length > 80 ? '...' : ''}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {skill.category}
+                      {skill.category === 'composite'
+                        ? ' -- visual flow'
+                        : ` -- ${skill.prompt.slice(0, 80)}${skill.prompt.length > 80 ? '...' : ''}`
+                      }
+                    </div>
                   </div>
                   <div className="flex gap-1 ml-2">
                     <button onClick={() => setEditingSkill(skill)} className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">Edit</button>
@@ -149,6 +178,11 @@ export default function SkillsRulesModal({ skills, rules, onSkillsChange, onRule
               onSave={handleSaveSkill}
               onDelete={() => handleDeleteSkill(editingSkill.id)}
               onCancel={() => setEditingSkill(null)}
+              onOpenFlowEditor={(skill) => {
+                // Save current state first, then open flow editor
+                handleSaveSkill(skill);
+                setFlowEditorSkill(skill);
+              }}
             />
           )}
 
@@ -192,15 +226,18 @@ export default function SkillsRulesModal({ skills, rules, onSkillsChange, onRule
   );
 }
 
-function SkillEditor({ skill, onSave, onDelete, onCancel }: {
+function SkillEditor({ skill, onSave, onDelete, onCancel, onOpenFlowEditor }: {
   skill: Skill;
   onSave: (skill: Skill) => void;
   onDelete: () => void;
   onCancel: () => void;
+  onOpenFlowEditor: (skill: Skill) => void;
 }) {
   const [name, setName] = useState(skill.name);
   const [category, setCategory] = useState<Skill['category']>(skill.category);
   const [prompt, setPrompt] = useState(skill.prompt);
+
+  const isComposite = category === 'composite';
 
   return (
     <div className="space-y-3">
@@ -226,23 +263,46 @@ function SkillEditor({ skill, onSave, onDelete, onCancel }: {
           ))}
         </select>
       </div>
-      <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">Instructions</label>
-        <textarea
-          value={prompt}
-          onChange={e => setPrompt(e.target.value)}
-          placeholder={SKILL_PLACEHOLDERS[category]}
-          rows={6}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none"
-        />
-      </div>
+      {isComposite ? (
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1">Description (optional)</label>
+          <input
+            type="text"
+            value={prompt}
+            onChange={e => setPrompt(e.target.value)}
+            placeholder="Brief description of what this composite skill does"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+          />
+          <button
+            onClick={() => onOpenFlowEditor({ ...skill, name, category, prompt, workspace: skill.workspace })}
+            disabled={!name.trim()}
+            className="w-full mt-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm font-medium disabled:opacity-50"
+          >
+            Open Flow Editor
+          </button>
+          {skill.workspace && (
+            <p className="text-xs text-green-600 mt-1">Flow has been configured.</p>
+          )}
+        </div>
+      ) : (
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1">Instructions</label>
+          <textarea
+            value={prompt}
+            onChange={e => setPrompt(e.target.value)}
+            placeholder={SKILL_PLACEHOLDERS[category]}
+            rows={6}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 resize-none"
+          />
+        </div>
+      )}
       <div className="flex gap-2 justify-between">
         <button onClick={onDelete} className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm">Delete</button>
         <div className="flex gap-2">
           <button onClick={onCancel} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 text-sm">Cancel</button>
           <button
             onClick={() => onSave({ ...skill, name, category, prompt })}
-            disabled={!name.trim() || !prompt.trim()}
+            disabled={!name.trim() || (!isComposite && !prompt.trim())}
             className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm font-medium disabled:opacity-50"
           >
             Done

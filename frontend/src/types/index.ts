@@ -88,5 +88,11 @@ export type WSEvent =
   | { type: 'serial_data'; line: string; timestamp: string }
   | { type: 'human_gate'; task_id: string; question: string; context: string }
   | { type: 'user_question'; task_id: string; questions: QuestionPayload[] }
+  | { type: 'skill_started'; skill_id: string; skill_name: string }
+  | { type: 'skill_step'; skill_id: string; step_id: string; step_type: string; status: 'started' | 'completed' | 'failed' }
+  | { type: 'skill_question'; skill_id: string; step_id: string; questions: QuestionPayload[] }
+  | { type: 'skill_output'; skill_id: string; step_id: string; content: string }
+  | { type: 'skill_completed'; skill_id: string; result: string }
+  | { type: 'skill_error'; skill_id: string; message: string }
   | { type: 'error'; message: string; recoverable: boolean }
   | { type: 'session_complete'; summary: string };

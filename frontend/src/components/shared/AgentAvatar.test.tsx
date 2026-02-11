@@ -8,34 +8,34 @@ describe('AgentAvatar', () => {
     expect(screen.getByText('S')).toBeInTheDocument();
   });
 
-  it('uses blue for builder role', () => {
+  it('uses sky for builder role', () => {
     const { container } = render(<AgentAvatar name="Sparky" role="builder" status="idle" />);
     const avatar = container.firstChild as HTMLElement;
-    expect(avatar.className).toContain('bg-blue-500');
+    expect(avatar.className).toContain('bg-accent-sky');
   });
 
-  it('uses green for tester role', () => {
+  it('uses mint for tester role', () => {
     const { container } = render(<AgentAvatar name="Testy" role="tester" status="idle" />);
     const avatar = container.firstChild as HTMLElement;
-    expect(avatar.className).toContain('bg-green-500');
+    expect(avatar.className).toContain('bg-accent-mint');
   });
 
-  it('uses purple for reviewer role', () => {
+  it('uses lavender for reviewer role', () => {
     const { container } = render(<AgentAvatar name="Review" role="reviewer" status="idle" />);
     const avatar = container.firstChild as HTMLElement;
-    expect(avatar.className).toContain('bg-purple-500');
+    expect(avatar.className).toContain('bg-accent-lavender');
   });
 
-  it('uses orange for custom role', () => {
+  it('uses coral for custom role', () => {
     const { container } = render(<AgentAvatar name="Custom" role="custom" status="idle" />);
     const avatar = container.firstChild as HTMLElement;
-    expect(avatar.className).toContain('bg-orange-500');
+    expect(avatar.className).toContain('bg-accent-coral');
   });
 
   it('applies opacity for idle status', () => {
     const { container } = render(<AgentAvatar name="S" role="builder" status="idle" />);
     const avatar = container.firstChild as HTMLElement;
-    expect(avatar.className).toContain('opacity-60');
+    expect(avatar.className).toContain('opacity-50');
   });
 
   it('applies bounce animation for working status', () => {
@@ -46,15 +46,14 @@ describe('AgentAvatar', () => {
 
   it('shows checkmark for done status', () => {
     const { container } = render(<AgentAvatar name="S" role="builder" status="done" />);
-    // The checkmark is rendered as &#10003;
-    const checkmark = container.querySelector('.bg-green-400');
+    const checkmark = container.querySelector('.bg-accent-mint');
     expect(checkmark).toBeTruthy();
   });
 
-  it('applies red bg for error status', () => {
+  it('applies coral bg for error status', () => {
     const { container } = render(<AgentAvatar name="S" role="builder" status="error" />);
     const avatar = container.firstChild as HTMLElement;
-    expect(avatar.className).toContain('bg-red-500');
+    expect(avatar.className).toContain('bg-accent-coral');
   });
 
   it('supports small size', () => {

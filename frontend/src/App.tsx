@@ -194,17 +194,17 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 text-gray-900">
+    <div className="flex flex-col h-screen atelier-bg noise-overlay text-atelier-text">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
-        <div className="flex items-center gap-2">
-          <img src={elisaLogo} alt="Elisa logo" className="h-8 w-8 rounded-full" />
-          <h1 className="text-xl font-bold tracking-tight">Elisa</h1>
+      <header className="relative z-10 flex items-center justify-between px-5 py-2.5 glass-panel border-t-0 border-x-0">
+        <div className="flex items-center gap-3">
+          <img src={elisaLogo} alt="Elisa logo" className="h-8 w-8 rounded-full ring-2 ring-accent-lavender/30" />
+          <h1 className="text-xl font-display font-bold tracking-tight gradient-text-warm">Elisa</h1>
         </div>
         <nav className="flex gap-2">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="px-3 py-1 text-sm rounded bg-gray-100 text-gray-700 hover:bg-gray-200"
+            className="px-3 py-1.5 text-sm rounded-lg bg-atelier-surface/80 text-atelier-text-secondary hover:bg-atelier-elevated hover:text-atelier-text transition-colors font-medium"
           >
             Open
           </button>
@@ -218,33 +218,33 @@ export default function App() {
           <button
             onClick={handleSaveNugget}
             disabled={!workspaceJson}
-            className={`px-3 py-1 text-sm rounded ${
+            className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${
               workspaceJson
-                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-atelier-surface/80 text-atelier-text-secondary hover:bg-atelier-elevated hover:text-atelier-text'
+                : 'bg-atelier-surface/40 text-atelier-text-muted cursor-not-allowed'
             }`}
           >
             Save
           </button>
           <button
             onClick={() => setSkillsModalOpen(true)}
-            className="px-3 py-1 text-sm rounded bg-purple-100 text-purple-700 hover:bg-purple-200"
+            className="px-3 py-1.5 text-sm rounded-lg bg-accent-lavender/15 text-accent-lavender hover:bg-accent-lavender/25 transition-colors font-medium"
           >
             Skills
           </button>
           <button
             onClick={() => setPortalsModalOpen(true)}
-            className="px-3 py-1 text-sm rounded bg-teal-100 text-teal-700 hover:bg-teal-200"
+            className="px-3 py-1.5 text-sm rounded-lg bg-accent-sky/15 text-accent-sky hover:bg-accent-sky/25 transition-colors font-medium"
           >
             Portals
           </button>
           <button
             onClick={() => setExamplePickerOpen(true)}
-            className="px-3 py-1 text-sm rounded bg-amber-100 text-amber-700 hover:bg-amber-200"
+            className="px-3 py-1.5 text-sm rounded-lg bg-accent-gold/15 text-accent-gold hover:bg-accent-gold/25 transition-colors font-medium"
           >
             Examples
           </button>
-          <button className="px-3 py-1 text-sm rounded bg-gray-100 text-gray-500 cursor-not-allowed">
+          <button className="px-3 py-1.5 text-sm rounded-lg bg-atelier-surface/40 text-atelier-text-muted cursor-not-allowed font-medium">
             Help
           </button>
         </nav>
@@ -252,7 +252,7 @@ export default function App() {
       </header>
 
       {/* Main area */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative z-10">
         {/* Left: BlockCanvas */}
         <div className="flex-1 relative">
           <BlockCanvas
@@ -267,7 +267,7 @@ export default function App() {
         </div>
 
         {/* Right: Mission Control */}
-        <div className="w-80 border-l border-gray-200 bg-white overflow-y-auto">
+        <div className="w-80 glass-panel border-t-0 border-b-0 border-r-0 overflow-y-auto">
           <MissionControl
             spec={spec}
             tasks={tasks}
@@ -341,18 +341,18 @@ export default function App() {
 
       {/* Done mode overlay */}
       {uiState === 'done' && (
-        <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md mx-4 text-center">
-            <h2 className="text-2xl font-bold mb-4">Nugget Complete!</h2>
-            <p className="text-gray-600 mb-4">
+        <div className="fixed inset-0 modal-backdrop z-40 flex items-center justify-center">
+          <div className="glass-elevated rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center animate-float-in">
+            <h2 className="text-2xl font-display font-bold mb-4 gradient-text-warm">Nugget Complete!</h2>
+            <p className="text-atelier-text-secondary mb-4">
               {events.find(e => e.type === 'session_complete')?.type === 'session_complete'
                 ? (events.find(e => e.type === 'session_complete') as { type: 'session_complete'; summary: string }).summary
                 : 'Your nugget has been built successfully.'}
             </p>
             {teachingMoments.length > 0 && (
-              <div className="text-left mb-4 bg-blue-50 rounded-lg p-3">
-                <h3 className="text-sm font-semibold text-blue-800 mb-2">What you learned:</h3>
-                <ul className="text-sm text-blue-700 space-y-1">
+              <div className="text-left mb-4 bg-accent-lavender/10 rounded-xl p-4 border border-accent-lavender/20">
+                <h3 className="text-sm font-semibold text-accent-lavender mb-2">What you learned:</h3>
+                <ul className="text-sm text-atelier-text-secondary space-y-1">
                   {teachingMoments.map((m, i) => (
                     <li key={i}>- {m.headline}</li>
                   ))}
@@ -363,7 +363,7 @@ export default function App() {
               onClick={() => {
                 window.location.reload();
               }}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              className="go-btn px-6 py-2.5 rounded-xl text-sm cursor-pointer"
             >
               Build something new
             </button>
@@ -375,7 +375,7 @@ export default function App() {
       <TeachingToast moment={currentToast} onDismiss={handleDismissToast} />
 
       {/* Footer with GO button */}
-      <footer className="flex items-center justify-center px-4 py-3 bg-white border-t border-gray-200">
+      <footer className="relative z-10 flex items-center justify-center px-4 py-3 glass-panel border-b-0 border-x-0">
         <GoButton
           disabled={uiState !== 'design' || !spec?.nugget.goal}
           onClick={handleGo}

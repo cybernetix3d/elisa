@@ -1,1 +1,306 @@
 @import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════
+   ELISA DESIGN SYSTEM
+   A warm, refined light theme inspired by Claude Desktop
+   ═══════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── Background Scale (warm light) ── */
+  --color-atelier-deep: #FAF7F4;
+  --color-atelier-base: #F3EDE7;
+  --color-atelier-surface: #FFFFFF;
+  --color-atelier-elevated: #F5F2EE;
+  --color-atelier-hover: #EDE8E2;
+
+  /* ── Text Scale (warm dark) ── */
+  --color-atelier-text: #2D2B29;
+  --color-atelier-text-secondary: #6B6560;
+  --color-atelier-text-muted: #A09892;
+
+  /* ── Accents (rich, saturated for light bg) ── */
+  --color-accent-coral: #DA7756;
+  --color-accent-gold: #C4880A;
+  --color-accent-lavender: #7C5CFC;
+  --color-accent-mint: #2D9F3E;
+  --color-accent-sky: #3D8FD6;
+
+  /* ── Borders ── */
+  --color-border-subtle: rgba(0, 0, 0, 0.06);
+  --color-border-medium: rgba(0, 0, 0, 0.12);
+  --color-border-accent: rgba(124, 92, 252, 0.20);
+
+  /* ── Fonts ── */
+  --font-display: 'Fredoka', ui-rounded, system-ui, sans-serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* ── Base Styles ── */
+
+html {
+  font-family: var(--font-body);
+  color: var(--color-atelier-text);
+  background: var(--color-atelier-deep);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+/* ── Glass Panels (frosted white) ── */
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.glass-elevated {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border-medium);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* ── Subtle Warm Gradient Background ── */
+
+.atelier-bg {
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 90%, rgba(124, 92, 252, 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 20%, rgba(218, 119, 86, 0.03) 0%, transparent 50%),
+    var(--color-atelier-deep);
+}
+
+/* ── Glow Effects (softer for light bg) ── */
+
+.glow-coral {
+  box-shadow: 0 2px 12px rgba(218, 119, 86, 0.25);
+}
+
+.glow-gold {
+  box-shadow: 0 2px 12px rgba(196, 136, 10, 0.25);
+}
+
+.glow-lavender {
+  box-shadow: 0 2px 12px rgba(124, 92, 252, 0.25);
+}
+
+.glow-mint {
+  box-shadow: 0 2px 12px rgba(45, 159, 62, 0.25);
+}
+
+.glow-sky {
+  box-shadow: 0 2px 12px rgba(61, 143, 214, 0.25);
+}
+
+/* ── GO Button ── */
+
+.go-btn {
+  background: linear-gradient(135deg, var(--color-accent-coral) 0%, var(--color-accent-gold) 100%);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border: none;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.go-btn::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--color-accent-coral), var(--color-accent-gold));
+  filter: blur(14px);
+  opacity: 0.3;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+.go-btn:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 4px 24px rgba(218, 119, 86, 0.3), 0 2px 8px rgba(196, 136, 10, 0.15);
+}
+
+.go-btn:hover:not(:disabled)::before {
+  opacity: 0.5;
+}
+
+.go-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.go-btn:disabled {
+  background: var(--color-atelier-hover);
+  color: var(--color-atelier-text-muted);
+  cursor: not-allowed;
+}
+
+.go-btn:disabled::before {
+  display: none;
+}
+
+/* ── Gradient Text ── */
+
+.gradient-text-warm {
+  background: linear-gradient(135deg, var(--color-accent-coral) 0%, var(--color-accent-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Scrollbar Styling ── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.10);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+/* ── Animations ── */
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes float-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes breathe {
+  0%, 100% { box-shadow: 0 2px 12px rgba(218, 119, 86, 0.20); }
+  50% { box-shadow: 0 4px 20px rgba(218, 119, 86, 0.35); }
+}
+
+.animate-float-in {
+  animation: float-in 0.3s ease-out;
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* ── Blockly Light Theme Overrides ── */
+
+.blocklyMainBackground {
+  fill: var(--color-atelier-base) !important;
+}
+
+.blocklyToolboxDiv {
+  background-color: #FFFFFF !important;
+  border-right: 1px solid var(--color-border-subtle) !important;
+}
+
+.blocklyTreeRow:not(.blocklyTreeSelected):hover {
+  background-color: var(--color-atelier-elevated) !important;
+}
+
+.blocklyTreeSelected {
+  background-color: var(--color-atelier-hover) !important;
+}
+
+.blocklyTreeLabel,
+.blocklyTreeRow {
+  color: var(--color-atelier-text-secondary) !important;
+  font-family: var(--font-body) !important;
+  font-size: 13px !important;
+}
+
+.blocklyTreeSelected .blocklyTreeLabel {
+  color: var(--color-atelier-text) !important;
+}
+
+.blocklyFlyoutBackground {
+  fill: #FFFFFF !important;
+  fill-opacity: 0.95 !important;
+}
+
+.blocklyScrollbarBackground {
+  fill: transparent !important;
+}
+
+.blocklyScrollbarHandle {
+  fill: rgba(0, 0, 0, 0.10) !important;
+}
+
+.blocklyTrash image {
+  opacity: 0.4;
+}
+
+.blocklyZoom > image {
+  opacity: 0.4;
+}
+
+.blocklyZoom > image:hover {
+  opacity: 0.7;
+}
+
+/* Grid lines */
+.blocklyGridLine {
+  stroke: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* ── Modal Backdrop ── */
+
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── Subtle grain texture ── */
+
+.noise-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.012;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Terminal panel (stays dark) ── */
+
+.terminal-panel {
+  background: #1E1C1A;
+  color: #6BCB77;
+}
+
+/* ── ReactFlow overrides ── */
+.react-flow__attribution {
+  display: none !important;
+}

@@ -60,14 +60,14 @@ export default function QuestionModal({ taskId, questions, sessionId, onClose }:
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-lg mx-4 w-full max-h-[80vh] overflow-y-auto">
-        <h2 className="text-lg font-bold mb-4">Your helpers have a question</h2>
+    <div className="fixed inset-0 modal-backdrop z-50 flex items-center justify-center">
+      <div className="glass-elevated rounded-2xl shadow-2xl p-6 max-w-lg mx-4 w-full max-h-[80vh] overflow-y-auto animate-float-in">
+        <h2 className="text-lg font-display font-bold mb-4 text-atelier-text">Your helpers have a question</h2>
 
         {questions.map((q, qIndex) => (
           <div key={qIndex} className="mb-5">
-            <p className="text-sm font-semibold text-gray-800 mb-2">{q.question}</p>
-            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded mb-2 inline-block">
+            <p className="text-sm font-semibold text-atelier-text mb-2">{q.question}</p>
+            <span className="text-xs bg-atelier-surface text-atelier-text-muted px-2 py-0.5 rounded-full mb-2 inline-block">
               {q.header}
             </span>
 
@@ -80,10 +80,10 @@ export default function QuestionModal({ taskId, questions, sessionId, onClose }:
                 return (
                   <label
                     key={opt.label}
-                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
                       isSelected
-                        ? 'border-blue-400 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-accent-lavender/50 bg-accent-lavender/10'
+                        : 'border-border-subtle hover:border-border-medium'
                     }`}
                   >
                     <input
@@ -95,12 +95,12 @@ export default function QuestionModal({ taskId, questions, sessionId, onClose }:
                           ? handleMultiSelect(qIndex, opt.label)
                           : handleSingleSelect(qIndex, opt.label)
                       }
-                      className="mt-0.5"
+                      className="mt-0.5 accent-accent-lavender"
                     />
                     <div>
-                      <div className="text-sm font-medium">{opt.label}</div>
+                      <div className="text-sm font-medium text-atelier-text">{opt.label}</div>
                       {opt.description && (
-                        <div className="text-xs text-gray-500">{opt.description}</div>
+                        <div className="text-xs text-atelier-text-muted">{opt.description}</div>
                       )}
                     </div>
                   </label>
@@ -109,12 +109,12 @@ export default function QuestionModal({ taskId, questions, sessionId, onClose }:
 
               {/* Other option */}
               <label
-                className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
                   (q.multiSelect
                     ? ((answers[qIndex] as string[]) || []).includes('__other__')
                     : answers[qIndex] === '__other__')
-                    ? 'border-blue-400 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-accent-lavender/50 bg-accent-lavender/10'
+                    : 'border-border-subtle hover:border-border-medium'
                 }`}
               >
                 <input
@@ -130,10 +130,10 @@ export default function QuestionModal({ taskId, questions, sessionId, onClose }:
                       ? handleMultiSelect(qIndex, '__other__')
                       : handleSingleSelect(qIndex, '__other__')
                   }
-                  className="mt-0.5"
+                  className="mt-0.5 accent-accent-lavender"
                 />
                 <div className="flex-1">
-                  <div className="text-sm font-medium">Other</div>
+                  <div className="text-sm font-medium text-atelier-text">Other</div>
                   {((q.multiSelect
                     ? ((answers[qIndex] as string[]) || []).includes('__other__')
                     : answers[qIndex] === '__other__')) && (
@@ -144,7 +144,7 @@ export default function QuestionModal({ taskId, questions, sessionId, onClose }:
                         setOtherText(prev => ({ ...prev, [qIndex]: e.target.value }))
                       }
                       placeholder="Type your answer..."
-                      className="mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      className="mt-1 w-full bg-atelier-surface border border-border-medium rounded-lg px-2 py-1 text-sm text-atelier-text placeholder-atelier-text-muted focus:outline-none focus:ring-2 focus:ring-accent-lavender/40"
                       autoFocus
                     />
                   )}
@@ -158,7 +158,7 @@ export default function QuestionModal({ taskId, questions, sessionId, onClose }:
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium text-sm disabled:opacity-50"
+            className="go-btn px-5 py-2 rounded-xl font-medium text-sm disabled:opacity-50 cursor-pointer"
           >
             Submit
           </button>

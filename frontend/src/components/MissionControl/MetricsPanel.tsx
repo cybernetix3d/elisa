@@ -10,7 +10,7 @@ function formatNumber(n: number): string {
 
 export default function MetricsPanel({ tokenUsage }: Props) {
   if (tokenUsage.total === 0) {
-    return <p className="text-sm text-gray-400">No token data yet</p>;
+    return <p className="text-sm text-atelier-text-muted">No token data yet</p>;
   }
 
   const agentNames = Object.keys(tokenUsage.perAgent);
@@ -18,10 +18,10 @@ export default function MetricsPanel({ tokenUsage }: Props) {
   return (
     <div className="space-y-2">
       <div className="text-sm">
-        <p className="font-medium text-gray-700">
+        <p className="font-medium text-atelier-text">
           Total tokens: {formatNumber(tokenUsage.total)}
         </p>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-atelier-text-muted">
           Input: {formatNumber(tokenUsage.input)} | Output: {formatNumber(tokenUsage.output)}
         </p>
       </div>
@@ -30,10 +30,10 @@ export default function MetricsPanel({ tokenUsage }: Props) {
           {agentNames.map(name => {
             const agent = tokenUsage.perAgent[name];
             return (
-              <li key={name} className="flex justify-between px-2 py-1 bg-gray-50 rounded">
-                <span className="font-medium">{name}</span>
-                <span className="text-gray-500">
-                  {formatNumber(agent.input + agent.output)} tokens
+              <li key={name} className="flex justify-between px-2.5 py-1.5 bg-atelier-surface/50 rounded-lg border border-border-subtle">
+                <span className="font-medium text-atelier-text-secondary">{name}</span>
+                <span className="text-atelier-text-muted font-mono">
+                  {formatNumber(agent.input + agent.output)}
                 </span>
               </li>
             );

@@ -16,13 +16,6 @@ interface MissionControlProps {
   deployProgress?: { step: string; progress: number } | null;
 }
 
-const STATUS_DOT: Record<string, string> = {
-  idle: 'bg-gray-400',
-  working: 'bg-blue-500 animate-pulse',
-  done: 'bg-green-500',
-  error: 'bg-red-500',
-};
-
 export default function MissionControl({ spec, tasks, agents, events, uiState, tokenUsage, deployProgress }: MissionControlProps) {
   const [debugOpen, setDebugOpen] = useState(false);
 
@@ -36,7 +29,6 @@ export default function MissionControl({ spec, tasks, agents, events, uiState, t
   const progressPct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
   const isPlanning = uiState === 'building' && tasks.length === 0;
 
-  const currentTask = tasks.find(t => t.status === 'in_progress');
   const isDeploying = uiState === 'building' && deployProgress != null;
 
   const getPhaseText = () => {
@@ -51,92 +43,93 @@ export default function MissionControl({ spec, tasks, agents, events, uiState, t
     return `State: ${uiState}`;
   };
 
-  const getProgressBarColor = () => {
-    if (uiState === 'done') return 'bg-green-500';
-    if (isDeploying) return 'bg-purple-500';
-    if (tasks.some(t => t.status === 'failed')) return 'bg-yellow-500';
-    return 'bg-blue-500';
+  const getProgressBarGradient = () => {
+    if (uiState === 'done') return 'bg-gradient-to-r from-accent-mint to-accent-mint/70';
+    if (isDeploying) return 'bg-gradient-to-r from-accent-lavender to-accent-lavender/70';
+    if (tasks.some(t => t.status === 'failed')) return 'bg-gradient-to-r from-accent-gold to-accent-coral';
+    return 'bg-gradient-to-r from-accent-sky to-accent-lavender';
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <h2 className="text-lg font-semibold">Mission Control</h2>
+    <div className="flex flex-col gap-5 p-4">
+      <h2 className="text-lg font-display font-semibold text-atelier-text">Mission Control</h2>
 
       <section>
-        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Agent Team</h3>
+        <h3 className="text-xs font-semibold text-atelier-text-muted uppercase tracking-wider mb-2">Agent Team</h3>
         {displayAgents.length ? (
-          <ul className="text-sm space-y-1">
+          <ul className="text-sm space-y-1.5">
             {displayAgents.map((a, i) => (
-              <li key={i} className="flex items-center gap-2 px-2 py-1 bg-orange-50 rounded">
+              <li key={i} className="flex items-center gap-2.5 px-3 py-1.5 bg-atelier-surface/60 rounded-lg border border-border-subtle">
                 <AgentAvatar name={a.name} role={a.role as Agent['role']} status={a.status as Agent['status']} size="sm" />
-                <span>{a.name} ({a.role})</span>
+                <span className="text-atelier-text-secondary">{a.name}</span>
+                <span className="text-atelier-text-muted text-xs ml-auto">{a.role}</span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-gray-400">No agents added yet</p>
+          <p className="text-sm text-atelier-text-muted">No agents added yet</p>
         )}
       </section>
 
       <section>
-        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Task Map</h3>
+        <h3 className="text-xs font-semibold text-atelier-text-muted uppercase tracking-wider mb-2">Task Map</h3>
         {tasks.length > 0 ? (
           <TaskDAG tasks={tasks} />
         ) : (
-          <p className="text-sm text-gray-400">Tasks will appear here during a build</p>
+          <p className="text-sm text-atelier-text-muted">Tasks will appear here during a build</p>
         )}
       </section>
 
       <section>
-        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Progress</h3>
+        <h3 className="text-xs font-semibold text-atelier-text-muted uppercase tracking-wider mb-2">Progress</h3>
         {isDeploying ? (
           <div>
-            <p className="text-sm text-purple-600 font-medium mb-1">{getPhaseText()}</p>
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <p className="text-sm text-accent-lavender font-medium mb-1.5">{getPhaseText()}</p>
+            <div className="w-full h-1.5 bg-atelier-surface rounded-full overflow-hidden">
               <div
-                className={`h-full ${getProgressBarColor()} transition-all duration-300`}
+                className={`h-full ${getProgressBarGradient()} transition-all duration-300 rounded-full`}
                 style={{ width: `${deployProgress!.progress}%` }}
               />
             </div>
           </div>
         ) : isPlanning ? (
-          <p className="text-sm text-blue-500 font-medium">{getPhaseText()}</p>
+          <p className="text-sm text-accent-sky font-medium">{getPhaseText()}</p>
         ) : totalCount > 0 ? (
           <div>
-            <p className="text-sm text-gray-600 mb-1">{getPhaseText()}</p>
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <p className="text-sm text-atelier-text-secondary mb-1.5">{getPhaseText()}</p>
+            <div className="w-full h-1.5 bg-atelier-surface rounded-full overflow-hidden">
               <div
-                className={`h-full ${getProgressBarColor()} transition-all duration-300`}
+                className={`h-full ${getProgressBarGradient()} transition-all duration-300 rounded-full`}
                 style={{ width: `${progressPct}%` }}
               />
             </div>
           </div>
         ) : uiState === 'done' ? (
-          <p className="text-sm text-green-600 font-bold">{getPhaseText()}</p>
+          <p className="text-sm text-accent-mint font-bold">{getPhaseText()}</p>
         ) : (
-          <p className="text-sm text-gray-400">{getPhaseText()}</p>
+          <p className="text-sm text-atelier-text-muted">{getPhaseText()}</p>
         )}
       </section>
 
       <section>
-        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Comms Feed</h3>
+        <h3 className="text-xs font-semibold text-atelier-text-muted uppercase tracking-wider mb-2">Comms Feed</h3>
         <CommsFeed events={events} />
       </section>
 
       <section>
-        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Token Usage</h3>
+        <h3 className="text-xs font-semibold text-atelier-text-muted uppercase tracking-wider mb-2">Token Usage</h3>
         <MetricsPanel tokenUsage={tokenUsage} />
       </section>
 
       <section>
         <button
           onClick={() => setDebugOpen(!debugOpen)}
-          className="text-xs text-gray-400 hover:text-gray-600 underline"
+          className="text-xs text-atelier-text-muted hover:text-atelier-text-secondary underline transition-colors"
         >
           {debugOpen ? 'Hide' : 'Show'} Debug Spec
         </button>
         {debugOpen && spec && (
-          <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto max-h-64">
+          <pre className="mt-2 text-xs bg-atelier-surface/80 text-atelier-text-secondary p-3 rounded-lg overflow-auto max-h-64 font-mono border border-border-subtle">
             {JSON.stringify(spec, null, 2)}
           </pre>
         )}

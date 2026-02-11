@@ -46,7 +46,7 @@ describe('MetricsPanel', () => {
     render(<MetricsPanel tokenUsage={usage} />);
     expect(screen.getByText('Sparky')).toBeInTheDocument();
     expect(screen.getByText('Checkers')).toBeInTheDocument();
-    expect(screen.getByText('150 tokens')).toBeInTheDocument();
-    expect(screen.getByText('300 tokens')).toBeInTheDocument();
+    expect(screen.getByText('150')).toBeInTheDocument();
+    expect(screen.getByText('300')).toBeInTheDocument();
   });
 });

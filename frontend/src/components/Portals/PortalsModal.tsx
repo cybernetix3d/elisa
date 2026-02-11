@@ -74,13 +74,13 @@ export default function PortalsModal({ portals, onPortalsChange, onClose }: Prop
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-lg mx-4 w-full max-h-[80vh] flex flex-col">
+    <div className="fixed inset-0 modal-backdrop z-50 flex items-center justify-center">
+      <div className="glass-elevated rounded-2xl shadow-2xl p-6 max-w-lg mx-4 w-full max-h-[80vh] flex flex-col animate-float-in">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">Portals</h2>
+          <h2 className="text-xl font-display font-bold text-atelier-text">Portals</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-lg font-bold"
+            className="text-atelier-text-muted hover:text-atelier-text text-lg font-bold transition-colors"
           >
             X
           </button>
@@ -90,38 +90,38 @@ export default function PortalsModal({ portals, onPortalsChange, onClose }: Prop
           {view === 'list' && (
             <div>
               {portals.map(portal => (
-                <div key={portal.id} className="border border-gray-200 rounded-lg p-3 mb-2 flex items-start justify-between">
+                <div key={portal.id} className="border border-border-subtle rounded-xl p-3 mb-2 flex items-start justify-between bg-atelier-surface/40">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{portal.name || '(unnamed)'}</span>
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-teal-100 text-teal-700">
+                      <span className="font-medium text-sm text-atelier-text">{portal.name || '(unnamed)'}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-accent-sky/15 text-accent-sky">
                         {MECHANISM_LABELS[portal.mechanism]}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-atelier-text-muted mt-1">
                       {portal.capabilities.length} capability{portal.capabilities.length !== 1 ? 'ies' : 'y'}
                       {portal.description ? ` -- ${portal.description.slice(0, 60)}${portal.description.length > 60 ? '...' : ''}` : ''}
                     </div>
                   </div>
                   <div className="flex gap-1 ml-2">
-                    <button onClick={() => handleEdit(portal)} className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">Edit</button>
-                    <button onClick={() => handleDelete(portal.id)} className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100">Delete</button>
+                    <button onClick={() => handleEdit(portal)} className="text-xs px-2 py-1 bg-atelier-elevated rounded-lg hover:bg-atelier-hover text-atelier-text-secondary transition-colors">Edit</button>
+                    <button onClick={() => handleDelete(portal.id)} className="text-xs px-2 py-1 bg-accent-coral/10 text-accent-coral rounded-lg hover:bg-accent-coral/20 transition-colors">Delete</button>
                   </div>
                 </div>
               ))}
               {portals.length === 0 && (
-                <p className="text-gray-400 text-sm text-center py-4">No portals yet. Add one to connect your nugget to the outside world.</p>
+                <p className="text-atelier-text-muted text-sm text-center py-4">No portals yet. Add one to connect your nugget to the outside world.</p>
               )}
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={handleCreate}
-                  className="flex-1 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 text-sm font-medium"
+                  className="flex-1 px-4 py-2 bg-accent-sky text-white rounded-xl hover:bg-accent-sky/80 text-sm font-medium transition-colors"
                 >
                   + New Portal
                 </button>
                 <button
                   onClick={() => setView('templates')}
-                  className="flex-1 px-4 py-2 bg-teal-50 text-teal-700 rounded-lg hover:bg-teal-100 text-sm font-medium border border-teal-200"
+                  className="flex-1 px-4 py-2 bg-accent-sky/15 text-accent-sky rounded-xl hover:bg-accent-sky/25 text-sm font-medium border border-accent-sky/20 transition-colors"
                 >
                   From Template
                 </button>
@@ -142,7 +142,7 @@ export default function PortalsModal({ portals, onPortalsChange, onClose }: Prop
             <div>
               <button
                 onClick={() => setView('list')}
-                className="text-sm text-gray-500 hover:text-gray-700 mb-3"
+                className="text-sm text-atelier-text-muted hover:text-atelier-text-secondary mb-3 transition-colors"
               >
                 &larr; Back to list
               </button>
@@ -151,16 +151,16 @@ export default function PortalsModal({ portals, onPortalsChange, onClose }: Prop
                   <button
                     key={template.templateId}
                     onClick={() => handleTemplateSelect(i)}
-                    className="border border-gray-200 rounded-lg p-3 text-left hover:border-teal-300 hover:bg-teal-50 transition-colors"
+                    className="border border-border-subtle rounded-xl p-3 text-left hover:border-accent-sky/40 hover:bg-accent-sky/5 transition-all bg-atelier-surface/40"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{template.name}</span>
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-teal-100 text-teal-700">
+                      <span className="font-medium text-sm text-atelier-text">{template.name}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-accent-sky/15 text-accent-sky">
                         {MECHANISM_LABELS[template.mechanism]}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">{template.description}</div>
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="text-xs text-atelier-text-muted mt-1">{template.description}</div>
+                    <div className="text-xs text-atelier-text-muted/60 mt-1">
                       {template.capabilities.length} capabilities: {template.capabilities.map(c => c.name).join(', ')}
                     </div>
                   </button>
@@ -219,34 +219,36 @@ function PortalEditor({ portal, onSave, onDelete, onCancel }: {
     return result;
   };
 
+  const inputClass = "w-full bg-atelier-surface border border-border-medium rounded-xl px-3 py-2 text-sm text-atelier-text placeholder-atelier-text-muted focus:outline-none focus:ring-2 focus:ring-accent-sky/40";
+
   return (
     <div className="space-y-3">
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
+        <label className="block text-xs font-medium text-atelier-text-secondary mb-1">Name</label>
         <input
           type="text"
           value={name}
           onChange={e => setName(e.target.value)}
           placeholder="e.g. My ESP32 Board"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300"
+          className={inputClass}
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
+        <label className="block text-xs font-medium text-atelier-text-secondary mb-1">Description</label>
         <textarea
           value={description}
           onChange={e => setDescription(e.target.value)}
           placeholder="What is this portal connected to?"
           rows={2}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 resize-none"
+          className={`${inputClass} resize-none`}
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">Mechanism</label>
+        <label className="block text-xs font-medium text-atelier-text-secondary mb-1">Mechanism</label>
         <select
           value={mechanism}
           onChange={e => setMechanism(e.target.value as PortalMechanism)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300"
+          className={inputClass}
         >
           {(Object.entries(MECHANISM_LABELS) as [PortalMechanism, string][]).map(([val, label]) => (
             <option key={val} value={val}>{label}</option>
@@ -255,84 +257,84 @@ function PortalEditor({ portal, onSave, onDelete, onCancel }: {
       </div>
 
       {mechanism === 'serial' && (
-        <div className="space-y-2 border-t border-gray-100 pt-2">
+        <div className="space-y-2 border-t border-border-subtle pt-2">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Serial Port</label>
+            <label className="block text-xs font-medium text-atelier-text-secondary mb-1">Serial Port</label>
             <input
               type="text"
               value={serialPort}
               onChange={e => setSerialPort(e.target.value)}
               placeholder="e.g. COM3 or /dev/ttyUSB0 (auto-detect if empty)"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300"
+              className={inputClass}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Baud Rate</label>
+            <label className="block text-xs font-medium text-atelier-text-secondary mb-1">Baud Rate</label>
             <input
               type="number"
               value={baudRate}
               onChange={e => setBaudRate(Number(e.target.value))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300"
+              className={inputClass}
             />
           </div>
         </div>
       )}
 
       {mechanism === 'mcp' && (
-        <div className="space-y-2 border-t border-gray-100 pt-2">
+        <div className="space-y-2 border-t border-border-subtle pt-2">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Command</label>
+            <label className="block text-xs font-medium text-atelier-text-secondary mb-1">Command</label>
             <input
               type="text"
               value={mcpCommand}
               onChange={e => setMcpCommand(e.target.value)}
               placeholder="e.g. npx"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300"
+              className={inputClass}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Arguments</label>
+            <label className="block text-xs font-medium text-atelier-text-secondary mb-1">Arguments</label>
             <input
               type="text"
               value={mcpArgs}
               onChange={e => setMcpArgs(e.target.value)}
               placeholder="e.g. -y @anthropic-ai/mcp-filesystem"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300"
+              className={inputClass}
             />
           </div>
         </div>
       )}
 
       {mechanism === 'cli' && (
-        <div className="space-y-2 border-t border-gray-100 pt-2">
+        <div className="space-y-2 border-t border-border-subtle pt-2">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Command</label>
+            <label className="block text-xs font-medium text-atelier-text-secondary mb-1">Command</label>
             <input
               type="text"
               value={cliCommand}
               onChange={e => setCliCommand(e.target.value)}
               placeholder="e.g. python3"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300"
+              className={inputClass}
             />
           </div>
         </div>
       )}
 
       {portal.capabilities.length > 0 && (
-        <div className="border-t border-gray-100 pt-2">
-          <label className="block text-xs font-medium text-gray-700 mb-1">Capabilities</label>
+        <div className="border-t border-border-subtle pt-2">
+          <label className="block text-xs font-medium text-atelier-text-secondary mb-1">Capabilities</label>
           <div className="space-y-1">
             {portal.capabilities.map(cap => (
               <div key={cap.id} className="flex items-center gap-2 text-xs">
-                <span className={`px-1.5 py-0.5 rounded ${
-                  cap.kind === 'action' ? 'bg-blue-100 text-blue-700' :
-                  cap.kind === 'event' ? 'bg-amber-100 text-amber-700' :
-                  'bg-green-100 text-green-700'
+                <span className={`px-1.5 py-0.5 rounded-full ${
+                  cap.kind === 'action' ? 'bg-accent-sky/15 text-accent-sky' :
+                  cap.kind === 'event' ? 'bg-accent-gold/15 text-accent-gold' :
+                  'bg-accent-mint/15 text-accent-mint'
                 }`}>
                   {cap.kind}
                 </span>
-                <span className="text-gray-700">{cap.name}</span>
-                <span className="text-gray-400">{cap.description}</span>
+                <span className="text-atelier-text-secondary">{cap.name}</span>
+                <span className="text-atelier-text-muted">{cap.description}</span>
               </div>
             ))}
           </div>
@@ -340,13 +342,13 @@ function PortalEditor({ portal, onSave, onDelete, onCancel }: {
       )}
 
       <div className="flex gap-2 justify-between">
-        <button onClick={onDelete} className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm">Delete</button>
+        <button onClick={onDelete} className="px-3 py-2 bg-accent-coral/10 text-accent-coral rounded-xl hover:bg-accent-coral/20 text-sm transition-colors">Delete</button>
         <div className="flex gap-2">
-          <button onClick={onCancel} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 text-sm">Cancel</button>
+          <button onClick={onCancel} className="px-3 py-2 bg-atelier-surface text-atelier-text-secondary rounded-xl hover:bg-atelier-elevated text-sm transition-colors">Cancel</button>
           <button
             onClick={() => onSave(buildPortal())}
             disabled={!name.trim()}
-            className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 text-sm font-medium disabled:opacity-50"
+            className="go-btn px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-50 cursor-pointer"
           >
             Done
           </button>

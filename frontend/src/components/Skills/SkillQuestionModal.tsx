@@ -49,14 +49,14 @@ export default function SkillQuestionModal({ stepId, questions, sessionId, onClo
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-lg mx-4 w-full max-h-[80vh] overflow-y-auto">
-        <h2 className="text-lg font-bold mb-4">Skill needs your input</h2>
+    <div className="fixed inset-0 modal-backdrop z-[60] flex items-center justify-center">
+      <div className="glass-elevated rounded-2xl shadow-2xl p-6 max-w-lg mx-4 w-full max-h-[80vh] overflow-y-auto animate-float-in">
+        <h2 className="text-lg font-display font-bold mb-4 text-atelier-text">Skill needs your input</h2>
 
         {questions.map((q, qIndex) => (
           <div key={qIndex} className="mb-5">
-            <p className="text-sm font-semibold text-gray-800 mb-2">{q.question}</p>
-            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded mb-2 inline-block">
+            <p className="text-sm font-semibold text-atelier-text mb-2">{q.question}</p>
+            <span className="text-xs bg-atelier-surface text-atelier-text-muted px-2 py-0.5 rounded-full mb-2 inline-block">
               {q.header}
             </span>
 
@@ -69,10 +69,10 @@ export default function SkillQuestionModal({ stepId, questions, sessionId, onClo
                 return (
                   <label
                     key={opt.label}
-                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
                       isSelected
-                        ? 'border-purple-400 bg-purple-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-accent-lavender/50 bg-accent-lavender/10'
+                        : 'border-border-subtle hover:border-border-medium'
                     }`}
                   >
                     <input
@@ -84,12 +84,12 @@ export default function SkillQuestionModal({ stepId, questions, sessionId, onClo
                           ? handleMultiSelect(qIndex, opt.label)
                           : handleSingleSelect(qIndex, opt.label)
                       }
-                      className="mt-0.5"
+                      className="mt-0.5 accent-accent-lavender"
                     />
                     <div>
-                      <div className="text-sm font-medium">{opt.label}</div>
+                      <div className="text-sm font-medium text-atelier-text">{opt.label}</div>
                       {opt.description && (
-                        <div className="text-xs text-gray-500">{opt.description}</div>
+                        <div className="text-xs text-atelier-text-muted">{opt.description}</div>
                       )}
                     </div>
                   </label>
@@ -103,7 +103,7 @@ export default function SkillQuestionModal({ stepId, questions, sessionId, onClo
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-5 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 font-medium text-sm disabled:opacity-50"
+            className="go-btn px-5 py-2 rounded-xl font-medium text-sm disabled:opacity-50 cursor-pointer"
           >
             Submit
           </button>

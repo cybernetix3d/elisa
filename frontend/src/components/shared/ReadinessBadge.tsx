@@ -23,7 +23,7 @@ function buildTooltip(health: HealthStatus): string {
 export default function ReadinessBadge({ health, loading }: ReadinessBadgeProps) {
   if (loading) {
     return (
-      <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-500">
+      <span className="text-xs px-2.5 py-1 rounded-full bg-atelier-elevated text-atelier-text-muted font-medium">
         Checking...
       </span>
     );
@@ -32,7 +32,7 @@ export default function ReadinessBadge({ health, loading }: ReadinessBadgeProps)
   if (health.status === 'ready') {
     return (
       <span
-        className="text-xs px-2 py-1 rounded bg-green-100 text-green-700"
+        className="text-xs px-2.5 py-1 rounded-full bg-accent-mint/15 text-accent-mint font-medium"
         title={buildTooltip(health)}
       >
         Ready
@@ -43,7 +43,7 @@ export default function ReadinessBadge({ health, loading }: ReadinessBadgeProps)
   if (health.status === 'offline') {
     return (
       <span
-        className="text-xs px-2 py-1 rounded bg-red-100 text-red-700"
+        className="text-xs px-2.5 py-1 rounded-full bg-accent-coral/15 text-accent-coral font-medium"
         title={buildTooltip(health)}
       >
         Offline
@@ -54,7 +54,7 @@ export default function ReadinessBadge({ health, loading }: ReadinessBadgeProps)
   // degraded
   return (
     <span
-      className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-700"
+      className="text-xs px-2.5 py-1 rounded-full bg-accent-gold/15 text-accent-gold font-medium"
       title={buildTooltip(health)}
     >
       Not Ready

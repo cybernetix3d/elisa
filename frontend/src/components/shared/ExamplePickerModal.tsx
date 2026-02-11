@@ -13,13 +13,20 @@ const CATEGORY_LABELS: Record<ExampleNugget['category'], string> = {
   game: 'Game',
 };
 
+const CATEGORY_COLORS: Record<ExampleNugget['category'], string> = {
+  web: 'bg-accent-sky/20 text-accent-sky',
+  hardware: 'bg-accent-coral/20 text-accent-coral',
+  'multi-agent': 'bg-accent-lavender/20 text-accent-lavender',
+  game: 'bg-accent-gold/20 text-accent-gold',
+};
+
 export default function ExamplePickerModal({ examples, onSelect, onClose }: Props) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[80vh] flex flex-col">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">Choose a Nugget to Explore</h2>
-          <p className="text-sm text-gray-500 mt-1">Pick an example to see how it works, or start from scratch.</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+      <div className="glass-elevated rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[80vh] flex flex-col animate-float-in">
+        <div className="px-6 py-5 border-b border-border-subtle">
+          <h2 className="text-xl font-display font-bold text-atelier-text">Choose a Nugget to Explore</h2>
+          <p className="text-sm text-atelier-text-muted mt-1">Pick an example to see how it works, or start from scratch.</p>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
@@ -29,24 +36,26 @@ export default function ExamplePickerModal({ examples, onSelect, onClose }: Prop
                 key={example.id}
                 data-testid={`example-card-${example.id}`}
                 onClick={() => onSelect(example)}
-                className={`${example.color} rounded-lg p-4 text-left hover:ring-2 hover:ring-gray-300 transition-shadow cursor-pointer`}
+                className="bg-atelier-surface/70 rounded-xl p-4 text-left hover:bg-atelier-elevated border border-border-subtle hover:border-border-medium transition-all cursor-pointer group"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <h3 className={`font-semibold ${example.accentColor}`}>{example.name}</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-white/60 text-gray-600">
+                  <h3 className="font-display font-semibold text-atelier-text group-hover:text-accent-gold transition-colors">
+                    {example.name}
+                  </h3>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${CATEGORY_COLORS[example.category]}`}>
                     {CATEGORY_LABELS[example.category]}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">{example.description}</p>
+                <p className="text-sm text-atelier-text-secondary">{example.description}</p>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+        <div className="px-6 py-4 border-t border-border-subtle flex justify-end">
           <button
             onClick={onClose}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
+            className="text-sm text-atelier-text-muted hover:text-atelier-text-secondary underline transition-colors"
           >
             or start with a blank canvas
           </button>

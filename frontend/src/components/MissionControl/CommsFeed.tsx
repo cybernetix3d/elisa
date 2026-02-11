@@ -34,18 +34,18 @@ export default function CommsFeed({ events }: Props) {
   }, [commEvents.length]);
 
   if (commEvents.length === 0) {
-    return <p className="text-sm text-gray-400">No messages yet</p>;
+    return <p className="text-sm text-atelier-text-muted">No messages yet</p>;
   }
 
   return (
     <div ref={feedRef} className="max-h-48 overflow-y-auto">
       <ul className="text-xs space-y-1">
         {commEvents.map((e, i) => (
-          <li key={i} className="px-2 py-1 bg-gray-50 rounded font-mono">
-            <span className={`font-semibold ${e.type === 'agent_message' ? 'text-blue-600' : 'text-orange-600'}`}>
+          <li key={i} className="px-2.5 py-1.5 bg-atelier-surface/50 rounded-lg font-mono border border-border-subtle">
+            <span className={`font-semibold ${e.type === 'agent_message' ? 'text-accent-sky' : 'text-accent-coral'}`}>
               {getAgentName(e)}:{' '}
             </span>
-            {getContent(e)}
+            <span className="text-atelier-text-secondary">{getContent(e)}</span>
           </li>
         ))}
       </ul>

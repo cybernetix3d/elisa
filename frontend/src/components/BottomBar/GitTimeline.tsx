@@ -2,9 +2,9 @@ import { useState } from 'react';
 import type { Commit } from '../../types';
 
 const ROLE_COLORS: Record<string, string> = {
-  builder: 'bg-blue-500',
-  tester: 'bg-green-500',
-  reviewer: 'bg-purple-500',
+  builder: 'bg-accent-sky',
+  tester: 'bg-accent-mint',
+  reviewer: 'bg-accent-lavender',
 };
 
 function getDotColor(agentName: string): string {
@@ -12,7 +12,7 @@ function getDotColor(agentName: string): string {
   for (const [role, color] of Object.entries(ROLE_COLORS)) {
     if (lower.includes(role)) return color;
   }
-  return 'bg-gray-400';
+  return 'bg-atelier-text-muted';
 }
 
 function formatTime(iso: string): string {
@@ -32,7 +32,7 @@ export default function GitTimeline({ commits }: Props) {
 
   if (commits.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-sm text-gray-400">
+      <div className="flex items-center justify-center h-full text-sm text-atelier-text-muted">
         Commits will appear here as agents work
       </div>
     );
@@ -44,22 +44,22 @@ export default function GitTimeline({ commits }: Props) {
         <div key={commit.sha}>
           <button
             type="button"
-            className="flex items-center gap-2 w-full text-left hover:bg-gray-50 rounded px-1 py-0.5"
+            className="flex items-center gap-2 w-full text-left hover:bg-atelier-surface/40 rounded-lg px-2 py-1 transition-colors"
             onClick={() => setExpanded(expanded === commit.sha ? null : commit.sha)}
           >
             <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${getDotColor(commit.agent_name)}`} />
-            <span className="text-xs font-medium text-gray-700 truncate">
+            <span className="text-xs font-medium text-atelier-text-secondary truncate">
               {commit.agent_name}:
             </span>
-            <span className="text-xs text-gray-500 truncate flex-1">
+            <span className="text-xs text-atelier-text-muted truncate flex-1">
               "{commit.message}"
             </span>
-            <span className="text-xs text-gray-400 flex-shrink-0 ml-auto">
+            <span className="text-xs text-atelier-text-muted/60 flex-shrink-0 ml-auto font-mono">
               {formatTime(commit.timestamp)}
             </span>
           </button>
           {expanded === commit.sha && commit.files_changed.length > 0 && (
-            <div className="ml-6 mt-0.5 mb-1 text-xs text-gray-400 space-y-0.5">
+            <div className="ml-6 mt-0.5 mb-1 text-xs text-atelier-text-muted space-y-0.5">
               {commit.files_changed.map((f) => (
                 <div key={f} className="font-mono">{f}</div>
               ))}

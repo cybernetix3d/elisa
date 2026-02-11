@@ -54,7 +54,7 @@ const BlockCanvas = forwardRef<BlockCanvasHandle, BlockCanvasProps>(
         grid: {
           spacing: 20,
           length: 3,
-          colour: '#ccc',
+          colour: 'rgba(0, 0, 0, 0.04)',
           snap: true,
         },
         zoom: {
@@ -109,8 +109,8 @@ const BlockCanvas = forwardRef<BlockCanvasHandle, BlockCanvasProps>(
       <div className="w-full h-full relative">
         <div ref={containerRef} className="w-full h-full" />
         {readOnly && (
-          <div className="absolute inset-0 bg-white/30 z-10 flex items-start justify-center pt-4">
-            <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full font-medium">
+          <div className="absolute inset-0 bg-white/40 z-10 flex items-start justify-center pt-4">
+            <span className="bg-accent-sky/20 text-accent-sky text-sm px-4 py-1.5 rounded-full font-medium backdrop-blur-sm border border-accent-sky/20">
               Building in progress...
             </span>
           </div>

@@ -16,19 +16,19 @@ export default function BoardOutput({ serialLines }: Props) {
 
   if (serialLines.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-sm text-gray-400">
+      <div className="flex items-center justify-center h-full text-sm text-atelier-text-muted">
         Connect your board to see its output
       </div>
     );
   }
 
   return (
-    <div ref={scrollRef} className="h-full overflow-y-auto bg-gray-900 text-green-400 font-mono text-xs p-2">
+    <div ref={scrollRef} className="h-full overflow-y-auto terminal-panel font-mono text-xs p-3">
       {serialLines.map((entry, i) => {
         const ts = entry.timestamp ? new Date(entry.timestamp).toLocaleTimeString() : '';
         return (
           <div key={i} className="whitespace-pre-wrap">
-            <span className="text-gray-500">{ts} </span>
+            <span className="text-atelier-text-muted">{ts} </span>
             {entry.line}
           </div>
         );

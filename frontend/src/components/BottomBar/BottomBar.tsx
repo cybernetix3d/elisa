@@ -20,16 +20,16 @@ export default function BottomBar({ commits, testResults, coveragePct, teachingM
   const [activeTab, setActiveTab] = useState<string>('Timeline');
 
   return (
-    <div className="border-t border-gray-200 bg-white">
-      <div className="flex items-center gap-1 px-4 py-1 bg-gray-100 border-b border-gray-200">
+    <div className="relative z-10 glass-panel border-x-0 border-b-0">
+      <div className="flex items-center gap-1 px-4 py-1.5 border-b border-border-subtle">
         {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1 text-xs rounded ${
+            className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
               activeTab === tab
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                ? 'bg-accent-lavender/20 text-accent-lavender'
+                : 'text-atelier-text-muted hover:text-atelier-text-secondary hover:bg-atelier-surface/60'
             }`}
           >
             {tab}

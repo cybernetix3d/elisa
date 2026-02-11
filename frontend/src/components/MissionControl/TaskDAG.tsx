@@ -16,10 +16,17 @@ const NODE_WIDTH = 170;
 const NODE_HEIGHT = 50;
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: '#9ca3af',
-  in_progress: '#3b82f6',
-  done: '#22c55e',
-  failed: '#ef4444',
+  pending: '#F5F2EE',
+  in_progress: '#3D8FD6',
+  done: '#2D9F3E',
+  failed: '#DA7756',
+};
+
+const STATUS_BORDERS: Record<string, string> = {
+  pending: '1px solid rgba(0,0,0,0.08)',
+  in_progress: '1px solid rgba(61,143,214,0.4)',
+  done: '1px solid rgba(45,159,62,0.4)',
+  failed: '1px solid rgba(218,119,86,0.4)',
 };
 
 interface TaskDAGProps {
@@ -75,15 +82,23 @@ function TaskDAGInner({ tasks }: TaskDAGProps) {
             width: NODE_WIDTH,
             height: NODE_HEIGHT,
             background: STATUS_COLORS[task.status] || STATUS_COLORS.pending,
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
+            color: task.status === 'pending' ? '#2D2B29' : '#FFFFFF',
+            border: STATUS_BORDERS[task.status] || STATUS_BORDERS.pending,
+            borderRadius: 10,
             fontSize: 11,
+            fontFamily: "'Outfit', system-ui, sans-serif",
             display: 'flex',
             flexDirection: 'column' as const,
             alignItems: 'center',
             justifyContent: 'center',
             padding: '4px 8px',
+            boxShadow: task.status === 'in_progress'
+              ? '0 2px 12px rgba(61, 143, 214, 0.25)'
+              : task.status === 'done'
+                ? '0 2px 12px rgba(45, 159, 62, 0.20)'
+                : task.status === 'pending'
+                  ? '0 1px 3px rgba(0, 0, 0, 0.06)'
+                  : 'none',
             animation: task.status === 'in_progress' ? 'pulse 1.5s infinite' : undefined,
           },
         };
@@ -94,8 +109,8 @@ function TaskDAGInner({ tasks }: TaskDAGProps) {
           id: `${dep}->${t.id}`,
           source: dep,
           target: t.id,
-          markerEnd: { type: 'arrowclosed' as const, color: '#6b7280' },
-          style: { stroke: '#6b7280', strokeWidth: 1.5 },
+          markerEnd: { type: 'arrowclosed' as const, color: '#C4BDB5' },
+          style: { stroke: '#C4BDB5', strokeWidth: 1.5 },
         }))
       );
 
@@ -117,6 +132,9 @@ function TaskDAGInner({ tasks }: TaskDAGProps) {
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.7; }
+        }
+        .react-flow__background {
+          background: transparent !important;
         }
       `}</style>
       <ReactFlow

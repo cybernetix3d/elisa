@@ -4,6 +4,8 @@ import { randomUUID } from 'node:crypto';
 import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'node:http';
+import fs from 'node:fs';
+import archiver from 'archiver';
 import type { BuildSession, SessionState } from './models/session.js';
 import { Orchestrator } from './services/orchestrator.js';
 import { HardwareService } from './services/hardwareService.js';
@@ -173,6 +175,35 @@ app.post('/api/sessions/:id/question', (req, res) => {
   if (!orch) { res.status(404).json({ detail: 'Session not found' }); return; }
   orch.respondToQuestion(req.body.task_id, req.body.answers ?? {});
   res.json({ status: 'ok' });
+});
+
+// Export session project as zip
+app.get('/api/sessions/:id/export', (req, res) => {
+  const orch = orchestrators.get(req.params.id);
+  if (!orch) { res.status(404).json({ detail: 'Session not found' }); return; }
+
+  const dir = orch.projectDir;
+  if (!fs.existsSync(dir)) {
+    res.status(404).json({ detail: 'Project directory not found' });
+    return;
+  }
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', 'attachment; filename="project.zip"');
+
+  const archive = archiver('zip', { zlib: { level: 5 } });
+  archive.on('error', (err) => {
+    res.status(500).json({ detail: err.message });
+  });
+  archive.pipe(res);
+  archive.directory(dir, false, (entry) => {
+    // Exclude .git and node_modules
+    if (entry.name.startsWith('.git/') || entry.name.startsWith('node_modules/')) {
+      return false as unknown as archiver.EntryData;
+    }
+    return entry;
+  });
+  archive.finalize();
 });
 
 // Templates

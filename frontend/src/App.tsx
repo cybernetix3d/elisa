@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import BlockCanvas from './components/BlockCanvas/BlockCanvas';
+import type { BlockCanvasHandle } from './components/BlockCanvas/BlockCanvas';
 import { interpretWorkspace, type ProjectSpec } from './components/BlockCanvas/blockInterpreter';
 import MissionControl from './components/MissionControl/MissionControl';
 import BottomBar from './components/BottomBar/BottomBar';
@@ -10,8 +11,23 @@ import QuestionModal from './components/shared/QuestionModal';
 import SkillsRulesModal from './components/Skills/SkillsRulesModal';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useBuildSession } from './hooks/useBuildSession';
+import { saveProjectFile, loadProjectFile, downloadBlob } from './lib/projectFile';
 import type { TeachingMoment } from './types';
 import type { Skill, Rule } from './components/Skills/types';
+
+const LS_WORKSPACE = 'elisa:workspace';
+const LS_SKILLS = 'elisa:skills';
+const LS_RULES = 'elisa:rules';
+
+function readLocalStorageJson<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw) as T;
+  } catch {
+    // corrupted data -- ignore
+  }
+  return null;
+}
 
 export default function App() {
   const [spec, setSpec] = useState<ProjectSpec | null>(null);
@@ -23,9 +39,21 @@ export default function App() {
   } = useBuildSession();
   const { connected } = useWebSocket({ sessionId, onEvent: handleEvent });
 
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [rules, setRules] = useState<Rule[]>([]);
+  // Restore skills/rules from localStorage on mount
+  const [skills, setSkills] = useState<Skill[]>(() => readLocalStorageJson<Skill[]>(LS_SKILLS) ?? []);
+  const [rules, setRules] = useState<Rule[]>(() => readLocalStorageJson<Rule[]>(LS_RULES) ?? []);
   const [skillsModalOpen, setSkillsModalOpen] = useState(false);
+
+  // The latest workspace JSON for saving projects
+  const [workspaceJson, setWorkspaceJson] = useState<Record<string, unknown> | null>(null);
+
+  // Saved workspace loaded from localStorage (read once on mount, passed to BlockCanvas)
+  const [initialWorkspace] = useState<Record<string, unknown> | null>(
+    () => readLocalStorageJson<Record<string, unknown>>(LS_WORKSPACE),
+  );
+
+  const blockCanvasRef = useRef<BlockCanvasHandle>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [currentToast, setCurrentToast] = useState<TeachingMoment | null>(null);
   const lastToastIndexRef = useRef(-1);
@@ -43,8 +71,23 @@ export default function App() {
     setCurrentToast(null);
   }, []);
 
+  // Persist skills/rules to localStorage on change
+  useEffect(() => {
+    localStorage.setItem(LS_SKILLS, JSON.stringify(skills));
+  }, [skills]);
+
+  useEffect(() => {
+    localStorage.setItem(LS_RULES, JSON.stringify(rules));
+  }, [rules]);
+
   const handleWorkspaceChange = useCallback((json: Record<string, unknown>) => {
     setSpec(interpretWorkspace(json, skills, rules));
+    setWorkspaceJson(json);
+    try {
+      localStorage.setItem(LS_WORKSPACE, JSON.stringify(json));
+    } catch {
+      // localStorage full or unavailable -- ignore
+    }
   }, [skills, rules]);
 
   const handleGo = async () => {
@@ -54,14 +97,86 @@ export default function App() {
     await startBuild(spec);
   };
 
+  // -- Save Project --
+  const handleSaveProject = async () => {
+    if (!workspaceJson) return;
+
+    let projectArchive: Blob | undefined;
+    if (sessionId) {
+      try {
+        const resp = await fetch(`/api/sessions/${sessionId}/export`);
+        if (resp.ok) {
+          projectArchive = await resp.blob();
+        }
+      } catch {
+        // no generated code available -- that's fine
+      }
+    }
+
+    const blob = await saveProjectFile(workspaceJson, skills, rules, projectArchive);
+    const name = spec?.project.goal
+      ? spec.project.goal.slice(0, 40).replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+$/, '')
+      : 'project';
+    downloadBlob(blob, `${name}.elisa`);
+  };
+
+  // -- Open Project --
+  const handleOpenProject = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const data = await loadProjectFile(file);
+
+      // Restore skills and rules
+      setSkills(data.skills);
+      setRules(data.rules);
+
+      // Restore workspace via imperative handle
+      setWorkspaceJson(data.workspace);
+      blockCanvasRef.current?.loadWorkspace(data.workspace);
+
+      // Update localStorage
+      localStorage.setItem(LS_WORKSPACE, JSON.stringify(data.workspace));
+      localStorage.setItem(LS_SKILLS, JSON.stringify(data.skills));
+      localStorage.setItem(LS_RULES, JSON.stringify(data.rules));
+    } catch (err) {
+      console.error('Failed to open project file:', err);
+    }
+
+    // Reset input so the same file can be selected again
+    e.target.value = '';
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-50 text-gray-900">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
         <h1 className="text-xl font-bold tracking-tight">Elisa</h1>
         <nav className="flex gap-2">
-          <button className="px-3 py-1 text-sm rounded bg-gray-100 text-gray-500 cursor-not-allowed">
-            My Projects
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="px-3 py-1 text-sm rounded bg-gray-100 text-gray-700 hover:bg-gray-200"
+          >
+            Open
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".elisa"
+            className="hidden"
+            onChange={handleOpenProject}
+          />
+          <button
+            onClick={handleSaveProject}
+            disabled={!workspaceJson}
+            className={`px-3 py-1 text-sm rounded ${
+              workspaceJson
+                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            Save
           </button>
           <button
             onClick={() => setSkillsModalOpen(true)}
@@ -82,7 +197,14 @@ export default function App() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left: BlockCanvas */}
         <div className="flex-1 relative">
-          <BlockCanvas onWorkspaceChange={handleWorkspaceChange} readOnly={uiState !== 'design'} skills={skills} rules={rules} />
+          <BlockCanvas
+            ref={blockCanvasRef}
+            onWorkspaceChange={handleWorkspaceChange}
+            readOnly={uiState !== 'design'}
+            skills={skills}
+            rules={rules}
+            initialWorkspace={initialWorkspace}
+          />
         </div>
 
         {/* Right: Mission Control */}

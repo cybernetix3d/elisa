@@ -54,13 +54,15 @@ Root `package.json` manages Electron and build tooling. Frontend and backend rem
 3. POST /api/sessions (create) -> POST /api/sessions/:id/start (with spec)
 4. Backend Orchestrator.run():
    a. PLAN:    MetaPlanner calls Claude API to decompose spec into task DAG
-   b. EXECUTE: Topological sort -> run ready tasks via AgentRunner (SDK query())
+   b. EXECUTE: Streaming-parallel pool (Promise.race, up to 3 concurrent tasks)
                 Each agent gets: role prompt + task description + context from prior tasks
                 Agent output streams via SDK -> WebSocket events to frontend
-                Git commit after each completed task
+                Git commit after each completed task (serialized via mutex)
+                Token budget tracked per agent; warning at 80%, halt on exceed
    c. TEST:    TestRunner executes pytest, parses results + coverage
    d. REVIEW:  Optional reviewer agent pass
    e. DEPLOY:  If ESP32: compile -> flash -> serial monitor
+               If CLI portals: execute via CliPortalAdapter (no shell)
 5. session_complete event with summary
 ```
 
@@ -115,7 +117,7 @@ idle -> planning -> executing -> testing -> reviewing -> deploying -> done
 
 ## Storage
 
-- **Session state**: In-memory `Map<sessionId, Session>`
+- **Session state**: In-memory `Map<sessionId, Session>` with optional JSON persistence for crash recovery
 - **Workspace**: Temp directory per session (`/tmp/elisa-nugget-{timestamp}`) containing generated code, tests, git repo, and `.elisa/` metadata
 - **localStorage**: Workspace JSON, skills, and rules auto-saved in browser (`elisa:workspace`, `elisa:skills`, `elisa:rules`). Restored on page load.
 - **Nugget files**: `.elisa` zip format for export/import (workspace + skills + rules + generated code)

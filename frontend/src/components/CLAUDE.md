@@ -15,7 +15,7 @@ App.tsx
   TaskMap/TaskMapPanel.tsx           Full-width interactive task DAG (Tasks tab)
   MissionControl/TaskDAG.tsx         @xyflow/react graph of task dependencies
   MissionControl/CommsFeed.tsx       Scrolling agent message log
-  MissionControl/MetricsPanel.tsx    Token usage bars per agent
+  MissionControl/MetricsPanel.tsx    Token usage bars per agent, cost display, budget percentage
   BottomBar/BottomBar.tsx            Tabbed panel (6 tabs: Timeline/Tests/Board/Learn/Progress/Tokens)
     GitTimeline.tsx                  Commit list with file diffs
     TestResults.tsx                  Pass/fail indicators + coverage bar (build-state aware)

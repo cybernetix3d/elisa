@@ -58,3 +58,5 @@ Main tabs: `workspace` | `agents` | `tasks` (auto-switches to `agents` when buil
 - Status colors: blue=working, green=done, red=error, yellow=warning
 - Test files colocated with source (`.test.tsx` / `.test.ts`)
 - WSEvent is a discriminated union - exhaustive switch in event handlers
+- Serial lines capped at MAX_SERIAL_LINES=1000 (oldest trimmed when exceeded)
+- Backend Zod validation errors surfaced via `body.detail` + `body.errors` array

@@ -4,6 +4,7 @@ import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { safeEnv } from '../utils/safeEnv.js';
 import { withTimeout } from '../utils/withTimeout.js';
 
 /** Detect which test file types exist in a directory. */
@@ -92,7 +93,7 @@ export class TestRunner {
       try {
         let childProc: import('node:child_process').ChildProcess | undefined;
         const execPromise = new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-          childProc = execFile('node', [filePath], { cwd: workDir }, (err, stdout, stderr) => {
+          childProc = execFile('node', [filePath], { cwd: workDir, env: safeEnv() }, (err, stdout, stderr) => {
             if (err) {
               if (stdout != null) (err as any).stdout = stdout;
               if (stderr != null) (err as any).stderr = stderr;
@@ -163,7 +164,7 @@ export class TestRunner {
     try {
       let childProc: import('node:child_process').ChildProcess | undefined;
       const execPromise = new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-        childProc = execFile('python', args, { cwd: workDir }, (err, stdoutBuf, stderrBuf) => {
+        childProc = execFile('python', args, { cwd: workDir, env: safeEnv() }, (err, stdoutBuf, stderrBuf) => {
           if (err) {
             if (stdoutBuf != null) (err as any).stdout = stdoutBuf;
             if (stderrBuf != null) (err as any).stderr = stderrBuf;

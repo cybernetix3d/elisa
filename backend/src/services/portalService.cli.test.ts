@@ -108,9 +108,10 @@ describe('CliPortalAdapter', () => {
     const opts = mockExecFileCalls[0][2];
     expect(opts.env).toBeDefined();
     expect(opts.env.MY_VAR).toBe('hello');
+    expect(opts.env.ANTHROPIC_API_KEY).toBeUndefined();
   });
 
-  it('does not set env when none provided', async () => {
+  it('strips ANTHROPIC_API_KEY from env when none provided', async () => {
     const adapter = new CliPortalAdapter([]);
     await adapter.initialize({ command: 'node' });
 
@@ -118,7 +119,8 @@ describe('CliPortalAdapter', () => {
 
     await adapter.execute('/tmp/test');
     const opts = mockExecFileCalls[0][2];
-    expect(opts.env).toBeUndefined();
+    expect(opts.env).toBeDefined();
+    expect(opts.env.ANTHROPIC_API_KEY).toBeUndefined();
   });
 
   it('stores and returns args via getArgs()', async () => {

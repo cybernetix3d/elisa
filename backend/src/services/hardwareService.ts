@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import type { CompileResult, FlashResult, BoardInfo } from '../models/session.js';
+import { safeEnv } from '../utils/safeEnv.js';
 import { withTimeout } from '../utils/withTimeout.js';
 
 const execFileAsync = promisify(execFile);
@@ -53,7 +54,7 @@ export class HardwareService {
 
     for (const filepath of pyFiles) {
       try {
-        await execFileAsync('python', ['-m', 'py_compile', filepath]);
+        await execFileAsync('python', ['-m', 'py_compile', filepath], { env: safeEnv() });
       } catch (err: any) {
         const stderr = (err.stderr || '').trim();
         const msg = stderr || err.message;
@@ -145,7 +146,7 @@ export class HardwareService {
     try {
       let childProc: import('node:child_process').ChildProcess | undefined;
       const execPromise = new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-        childProc = execFile(cmd[0], cmd.slice(1), (err, stdout, stderr) => {
+        childProc = execFile(cmd[0], cmd.slice(1), { env: safeEnv() }, (err, stdout, stderr) => {
           if (err) {
             if (stdout != null) (err as any).stdout = stdout;
             if (stderr != null) (err as any).stderr = stderr;
@@ -429,7 +430,7 @@ print('FLASH_OK')
 
     try {
       const result = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-        execFile('python', [scriptPath, port, manifestPath], { timeout: 60_000 }, (err, stdout, stderr) => {
+        execFile('python', [scriptPath, port, manifestPath], { timeout: 60_000, env: safeEnv() }, (err, stdout, stderr) => {
           if (err) {
             (err as any).stdout = stdout;
             (err as any).stderr = stderr;

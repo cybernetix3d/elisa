@@ -2,6 +2,7 @@
 
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { safeEnv } from '../utils/safeEnv.js';
 import type { HardwareService } from './hardwareService.js';
 
 const execFileAsync = promisify(execFile);
@@ -217,7 +218,7 @@ export class CliPortalAdapter implements PortalAdapter {
       const { stdout, stderr } = await execFileAsync(this.command, this.args, {
         cwd,
         timeout: timeoutMs,
-        env: this.env ? { ...process.env, ...this.env } : undefined,
+        env: this.env ? { ...safeEnv(), ...this.env } : safeEnv(),
       });
       return { success: true, stdout, stderr };
     } catch (err: any) {

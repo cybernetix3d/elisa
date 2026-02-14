@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import net from 'node:net';
 import path from 'node:path';
 import { spawn, execFile, type ChildProcess } from 'node:child_process';
+import { safeEnv } from '../../utils/safeEnv.js';
 import type { PhaseContext } from './types.js';
 import { maybeTeach } from './types.js';
 import { HardwareService } from '../hardwareService.js';
@@ -62,6 +63,7 @@ export class DeployPhase {
               cwd: ctx.nuggetDir,
               stdio: 'pipe',
               shell: isWin,
+              env: safeEnv(),
             });
             let stderr = '';
             buildProc.stderr?.on('data', (chunk: Buffer) => { stderr += chunk; });
@@ -104,6 +106,7 @@ export class DeployPhase {
         stdio: 'pipe',
         detached: false,
         shell: isWin,
+        env: safeEnv(),
       });
 
       // Wait for server to start or fail
@@ -124,11 +127,11 @@ export class DeployPhase {
         // Open browser (best-effort, only hardcoded localhost URL)
         try {
           if (isWin) {
-            execFile('cmd.exe', ['/c', 'start', '', url]);
+            execFile('cmd.exe', ['/c', 'start', '', url], { env: safeEnv() });
           } else if (process.platform === 'darwin') {
-            execFile('open', [url]);
+            execFile('open', [url], { env: safeEnv() });
           } else {
-            execFile('xdg-open', [url]);
+            execFile('xdg-open', [url], { env: safeEnv() });
           }
         } catch {
           // Browser open is best-effort

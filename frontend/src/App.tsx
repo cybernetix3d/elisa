@@ -581,6 +581,9 @@ export default function App() {
               )}
               <button
                 onClick={() => {
+                  if (sessionId) {
+                    navigator.sendBeacon(`/api/sessions/${sessionId}/stop`, '');
+                  }
                   window.location.reload();
                 }}
                 className="go-btn px-6 py-2.5 rounded-xl text-sm cursor-pointer"

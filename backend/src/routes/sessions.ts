@@ -176,6 +176,8 @@ export function createSessionRouter({ store, sendEvent, hardwareService }: Sessi
       recoverable: false,
     });
 
+    store.scheduleCleanup(req.params.id, 0);
+
     res.json({ status: 'stopped' });
   });
 

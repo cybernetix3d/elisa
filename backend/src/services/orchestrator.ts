@@ -211,9 +211,10 @@ export class Orchestrator {
     });
   }
 
-  /** Signal cancellation to the execution loop. */
+  /** Signal cancellation to the execution loop and release resources. */
   cancel(): void {
     this.abortController.abort();
+    this.cleanup();
   }
 
   /** Clean up the nugget temp directory immediately (skipped for user workspaces). */

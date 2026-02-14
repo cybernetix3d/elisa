@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Commit, TestResult, TeachingMoment, UIState, Task, TokenUsage } from '../../types';
+import type { Commit, TestResult, TeachingMoment, UIState, Task, Agent, TokenUsage } from '../../types';
 import type { SerialLine, DeployProgress } from '../../hooks/useBuildSession';
 import type { BoardInfo } from '../../hooks/useBoardDetect';
 import GitTimeline from './GitTimeline';
@@ -17,6 +17,7 @@ interface Props {
   serialLines: SerialLine[];
   uiState: UIState;
   tasks: Task[];
+  agents: Agent[];
   deployProgress: DeployProgress | null;
   deployChecklist: Array<{ name: string; prompt: string }> | null;
   tokenUsage: TokenUsage;
@@ -27,7 +28,7 @@ type Tab = 'Timeline' | 'Tests' | 'Board' | 'Learn' | 'Progress' | 'Tokens';
 
 export default function BottomBar({
   commits, testResults, coveragePct, teachingMoments, serialLines,
-  uiState, tasks, deployProgress, deployChecklist, tokenUsage, boardInfo,
+  uiState, tasks, agents, deployProgress, deployChecklist, tokenUsage, boardInfo,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('Timeline');
 
@@ -59,7 +60,7 @@ export default function BottomBar({
       </div>
       <div className="h-32 overflow-hidden">
         {activeTab === 'Timeline' && <GitTimeline commits={commits} />}
-        {activeTab === 'Tests' && <TestResults results={testResults} coveragePct={coveragePct} uiState={uiState} />}
+        {activeTab === 'Tests' && <TestResults results={testResults} coveragePct={coveragePct} uiState={uiState} tasks={tasks} agents={agents} />}
         {activeTab === 'Board' && <BoardOutput serialLines={serialLines} boardInfo={boardInfo} />}
         {activeTab === 'Learn' && <TeachingSidebar moments={teachingMoments} />}
         {activeTab === 'Progress' && <ProgressPanel uiState={uiState} tasks={tasks} deployProgress={deployProgress} deployChecklist={deployChecklist} />}

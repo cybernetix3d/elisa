@@ -417,6 +417,7 @@ export default function App() {
         serialLines={serialLines}
         uiState={uiState}
         tasks={tasks}
+        agents={agents}
         deployProgress={deployProgress ?? null}
         deployChecklist={deployChecklist ?? null}
         tokenUsage={tokenUsage}
@@ -567,24 +568,26 @@ export default function App() {
                 </ul>
               </div>
             )}
-            {deployUrl && (
-              <a
-                href={deployUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="go-btn px-6 py-2.5 rounded-xl text-sm inline-block mb-2"
+            <div className="flex flex-col items-center gap-2">
+              {deployUrl && (
+                <a
+                  href={deployUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="go-btn px-6 py-2.5 rounded-xl text-sm inline-block"
+                >
+                  Open in Browser
+                </a>
+              )}
+              <button
+                onClick={() => {
+                  window.location.reload();
+                }}
+                className="go-btn px-6 py-2.5 rounded-xl text-sm cursor-pointer"
               >
-                Open in Browser
-              </a>
-            )}
-            <button
-              onClick={() => {
-                window.location.reload();
-              }}
-              className="go-btn px-6 py-2.5 rounded-xl text-sm cursor-pointer"
-            >
-              Build something new
-            </button>
+                Build something new
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -58,10 +58,10 @@ export class DeployPhase {
           await ctx.send({ type: 'deploy_progress', step: 'Running build...', progress: 30 });
           await new Promise<void>((resolve, reject) => {
             const isWin = process.platform === 'win32';
-            const cmd = isWin ? 'npm.cmd' : 'npm';
-            const buildProc = spawn(cmd, ['run', 'build'], {
+            const buildProc = spawn('npm', ['run', 'build'], {
               cwd: ctx.nuggetDir,
               stdio: 'pipe',
+              shell: isWin,
             });
             let stderr = '';
             buildProc.stderr?.on('data', (chunk: Buffer) => { stderr += chunk; });
@@ -99,11 +99,11 @@ export class DeployPhase {
     const isWin = process.platform === 'win32';
 
     try {
-      const npxCmd = isWin ? 'npx.cmd' : 'npx';
-      serverProcess = spawn(npxCmd, ['serve', serveDir, '-l', String(port), '--no-clipboard'], {
+      serverProcess = spawn('npx', ['serve', serveDir, '-l', String(port), '--no-clipboard'], {
         cwd: ctx.nuggetDir,
         stdio: 'pipe',
         detached: false,
+        shell: isWin,
       });
 
       // Wait for server to start or fail
@@ -141,8 +141,9 @@ export class DeployPhase {
       serverProcess = null;
     }
 
-    await ctx.send({ type: 'deploy_complete', target: 'web', url });
-    return { process: serverProcess, url };
+    const finalUrl = serverProcess ? url : null;
+    await ctx.send({ type: 'deploy_complete', target: 'web', ...(finalUrl ? { url: finalUrl } : {}) });
+    return { process: serverProcess, url: finalUrl };
   }
 
   private static findFreePort(startPort: number): Promise<number> {

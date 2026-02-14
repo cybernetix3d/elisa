@@ -11,6 +11,7 @@ const defaultProps = {
   serialLines: [],
   uiState: 'design' as const,
   tasks: [],
+  agents: [],
   deployProgress: null,
   deployChecklist: null,
   tokenUsage: { input: 0, output: 0, total: 0, costUsd: 0, maxBudget: 500_000, perAgent: {} },
@@ -60,10 +61,34 @@ describe('BottomBar', () => {
     expect(screen.getByText('No test results yet')).toBeInTheDocument();
   });
 
-  it('Tests tab shows build-in-progress message during build', () => {
+  it('Tests tab shows build-in-progress message during build with no tester tasks', () => {
     render(<BottomBar {...defaultProps} uiState="building" />);
     fireEvent.click(screen.getByText('Tests'));
     expect(screen.getByText('Tests will run after tasks complete...')).toBeInTheDocument();
+  });
+
+  it('Tests tab shows tester task progress during build', () => {
+    const props = {
+      ...defaultProps,
+      uiState: 'building' as const,
+      agents: [
+        { name: 'TestBot', role: 'tester' as const, persona: 'Writes tests', status: 'working' as const },
+        { name: 'Builder', role: 'builder' as const, persona: 'Builds code', status: 'working' as const },
+      ],
+      tasks: [
+        { id: 't1', name: 'Write unit tests', description: '', status: 'done' as const, agent_name: 'TestBot', dependencies: [] },
+        { id: 't2', name: 'Write integration tests', description: '', status: 'in_progress' as const, agent_name: 'TestBot', dependencies: [] },
+        { id: 't3', name: 'Build login', description: '', status: 'done' as const, agent_name: 'Builder', dependencies: [] },
+      ],
+    };
+    render(<BottomBar {...props} />);
+    fireEvent.click(screen.getByText('Tests'));
+    expect(screen.getByText('Test Creation')).toBeInTheDocument();
+    expect(screen.getByText('(1/2)')).toBeInTheDocument();
+    expect(screen.getByText('Write unit tests')).toBeInTheDocument();
+    expect(screen.getByText('Write integration tests')).toBeInTheDocument();
+    // Builder task should not appear
+    expect(screen.queryByText('Build login')).not.toBeInTheDocument();
   });
 
   it('clicking Learn tab renders TeachingSidebar', () => {

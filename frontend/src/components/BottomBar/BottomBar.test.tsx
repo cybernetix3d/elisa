@@ -130,7 +130,7 @@ describe('BottomBar', () => {
     };
     render(<BottomBar {...props} />);
     fireEvent.click(screen.getByText('Tests'));
-    expect(screen.getByText('1/2 tests passing')).toBeInTheDocument();
+    expect(screen.getByText('1/2 passing')).toBeInTheDocument();
   });
 
   it('Learn tab shows teaching moments', () => {

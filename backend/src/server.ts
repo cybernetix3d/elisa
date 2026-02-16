@@ -2,6 +2,7 @@
 
 import 'dotenv/config';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -302,7 +303,7 @@ export function startServer(
 
 const isDirectRun =
   !process.env.ELECTRON_RUN_AS_NODE &&
-  import.meta.url.toLowerCase() === `file:///${process.argv[1]?.replace(/\\/g, '/')}`.toLowerCase();
+  import.meta.url.toLowerCase() === pathToFileURL(process.argv[1] ?? '').href.toLowerCase();
 
 if (isDirectRun) {
   const port = Number(process.env.PORT ?? 8000);

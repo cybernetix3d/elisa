@@ -258,6 +258,42 @@ describe('testerAgent formatTaskPrompt', () => {
     expect(result).not.toContain("kid's rules");
   });
 
+  describe('behavioral tests in prompt (#105)', () => {
+    it('includes behavioral tests section when present', () => {
+      const result = formatTaskPrompt({
+        ...baseParams,
+        spec: {
+          ...baseParams.spec,
+          workflow: {
+            behavioral_tests: [
+              { when: 'the user clicks play', then: 'the game starts' },
+              { when: 'the user presses escape', then: 'the menu opens' },
+            ],
+          },
+        },
+      });
+      expect(result).toContain('## Behavioral Tests to Verify');
+      expect(result).toContain('- When the user clicks play, then the game starts');
+      expect(result).toContain('- When the user presses escape, then the menu opens');
+    });
+
+    it('omits behavioral tests section when not present', () => {
+      const result = formatTaskPrompt(baseParams);
+      expect(result).not.toContain('Behavioral Tests to Verify');
+    });
+
+    it('omits behavioral tests section when empty array', () => {
+      const result = formatTaskPrompt({
+        ...baseParams,
+        spec: {
+          ...baseParams.spec,
+          workflow: { behavioral_tests: [] },
+        },
+      });
+      expect(result).not.toContain('Behavioral Tests to Verify');
+    });
+  });
+
   it('does NOT include portals (tester has no portal section)', () => {
     const result = formatTaskPrompt({
       ...baseParams,

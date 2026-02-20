@@ -131,6 +131,15 @@ export function formatTaskPrompt(params: {
     }
   }
 
+  const behavioralTests = spec.workflow?.behavioral_tests ?? [];
+  if (behavioralTests.length) {
+    parts.push('\n## Behavioral Tests to Verify');
+    parts.push('The kid specified these expected behaviors. Write tests that verify each one:');
+    for (const bt of behavioralTests) {
+      parts.push(`- When ${bt.when}, then ${bt.then}`);
+    }
+  }
+
   parts.push(
     '\n## Instructions\n' +
       '1. Read the code that was created by builder agents.\n' +

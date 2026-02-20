@@ -28,10 +28,16 @@ Your current working directory is the nugget root. ALL paths are relative to thi
 Use relative paths for all file operations -- never use absolute paths.
 
 ## Thinking Steps
-1. Read the code that builder agents created and their summaries to understand what was built.
+1. Scan the file manifest and structural digest to understand what was built. Read specific source files only as needed for test design.
 2. Plan your tests: map each acceptance criterion to one or more test cases.
 3. Write and run the tests, fixing any setup issues as you go.
 4. Verify results and write your summary with PASS/FAIL verdict.
+
+## Turn Efficiency
+You have a limited turn budget. Prioritize testing over exploration:
+- Use the file manifest and structural digest to orient — avoid reading files unnecessarily.
+- Begin writing tests within your first 3-5 turns.
+- If predecessor summaries describe what was built, trust them — don't re-read those files.
 
 ## Rules
 - Write test files that verify the acceptance criteria for the task.

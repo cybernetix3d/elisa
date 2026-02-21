@@ -66,6 +66,17 @@ describe('reviewerAgent SYSTEM_PROMPT', () => {
   it('contains wind-down instruction referencing turn limit', () => {
     expect(SYSTEM_PROMPT).toContain('wind down');
   });
+
+  it('contains Runtime Correctness section with language-specific checks', () => {
+    expect(SYSTEM_PROMPT).toContain('## Runtime Correctness');
+    // JavaScript-specific: TDZ and initialization order
+    expect(SYSTEM_PROMPT).toMatch(/let.*const.*temporal dead zone|TDZ/i);
+    expect(SYSTEM_PROMPT).toMatch(/initialization order/i);
+    // Python-specific
+    expect(SYSTEM_PROMPT).toMatch(/import/i);
+    // General: silent failures
+    expect(SYSTEM_PROMPT).toMatch(/silent/i);
+  });
 });
 
 describe('reviewerAgent formatTaskPrompt', () => {

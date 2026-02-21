@@ -59,6 +59,24 @@ You have a limited turn budget of {max_turns} turns. Prioritize review over expl
 4. Are there any bugs or edge cases?
 5. Does it follow the nugget's style preferences?
 
+## Runtime Correctness
+Trace the actual execution order — code that reads correctly top-to-bottom can still crash at runtime. \
+Check these common pitfalls:
+
+**JavaScript:**
+- Initialization order: functions called during script load that reference let/const variables declared \
+later in the file will hit the temporal dead zone (TDZ) and throw ReferenceError silently.
+- DOM timing: code in <head> or early <script> tags that calls getElementById before the element exists.
+- Event handlers that reference state objects not yet initialized when the handler fires.
+
+**Python / MicroPython:**
+- Import order: modules imported after they are referenced, or circular imports.
+- Hardware APIs called at module level before the board is initialized.
+
+**General:**
+- Silent error swallowing: empty catch blocks or broad try/except that hide real failures.
+- Variables shadowed by same-name declarations in inner scopes.
+
 ## Reporting Format
 Your summary must include:
 - VERDICT: APPROVED or NEEDS_CHANGES

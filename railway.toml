@@ -2,6 +2,8 @@
 builder = "NIXPACKS"
 
 [build.nixpacks]
+# Include git - required by Claude Code CLI for agent execution
+aptPkgs = ["git"]
 install = "cd backend && npm install"
 build = ""
 start = "cd backend && npm start"

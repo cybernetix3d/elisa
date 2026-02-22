@@ -6,10 +6,9 @@ builder = "NIXPACKS"
 aptPkgs = ["git"]
 install = "cd backend && npm install"
 build = ""
-start = "cd backend && npm start"
 
 [deploy]
-startCommand = "cd backend && npm start"
+startCommand = "chmod +x backend/start.sh && backend/start.sh"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"

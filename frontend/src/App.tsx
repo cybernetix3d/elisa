@@ -59,11 +59,13 @@ export default function App() {
   } = useBuildSession();
   const { waitForOpen } = useWebSocket({ sessionId, onEvent: handleEvent });
   const { health, loading: healthLoading } = useHealthCheck(uiState === 'design');
-  const { boardInfo, justConnected, acknowledgeConnection } = useBoardDetect(uiState === 'design');
 
   // Detect Electron vs pure web mode
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isElectron = !!(window as unknown as Record<string, any>).elisaAPI;
+
+  // Only poll for hardware boards in Electron mode (no serial ports on cloud servers)
+  const { boardInfo, justConnected, acknowledgeConnection } = useBoardDetect(uiState === 'design' && isElectron);
 
   // Fetch auth token on mount
   useEffect(() => {

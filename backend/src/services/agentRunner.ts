@@ -45,10 +45,10 @@ export class AgentRunner {
 
     const mcpConfig = mcpServers?.length
       ? Object.fromEntries(mcpServers.map(s => [s.name, {
-          command: s.command,
-          ...(s.args ? { args: s.args } : {}),
-          ...(s.env ? { env: s.env } : {}),
-        }]))
+        command: s.command,
+        ...(s.args ? { args: s.args } : {}),
+        ...(s.env ? { env: s.env } : {}),
+      }]))
       : undefined;
 
     const abortController = new AbortController();
@@ -100,6 +100,8 @@ export class AgentRunner {
     abortController?: AbortController,
     allowedTools?: string[],
   ): Promise<AgentResult> {
+    console.log(`[AgentRunner] Starting query for task ${taskId}, model=${model}, cwd=${cwd}`);
+
     const conversation = query({
       prompt,
       options: {
@@ -126,7 +128,7 @@ export class AgentRunner {
         for (const block of (message as any).message?.content ?? []) {
           if (block.type === 'text') {
             accumulatedText.push(block.text);
-            onOutput(taskId, block.text).catch(() => {});
+            onOutput(taskId, block.text).catch(() => { });
           }
         }
       }
@@ -139,12 +141,19 @@ export class AgentRunner {
 
         if (result.subtype === 'success') {
           finalResult = result.result ?? '';
+          console.log(`[AgentRunner] Task ${taskId} completed successfully`);
         } else {
           success = false;
           const errors: string[] = result.errors ?? [];
           finalResult = errors.join('; ')
             || accumulatedText.slice(-3).join('\n')
             || 'Unknown error';
+          console.error(`[AgentRunner] Task ${taskId} FAILED:`, {
+            subtype: result.subtype,
+            errors,
+            exitCode: result.exitCode ?? result.exit_code,
+            finalResult: finalResult.slice(0, 500),
+          });
         }
       }
     }

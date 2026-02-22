@@ -102,6 +102,9 @@ export class AgentRunner {
   ): Promise<AgentResult> {
     console.log(`[AgentRunner] Starting query for task ${taskId}, model=${model}, cwd=${cwd}`);
 
+    // Capture stderr from Claude Code CLI for debugging
+    const stderrChunks: string[] = [];
+
     const conversation = query({
       prompt,
       options: {
@@ -110,6 +113,10 @@ export class AgentRunner {
         maxTurns,
         permissionMode: 'bypassPermissions',
         systemPrompt,
+        stderr: (data: string) => {
+          stderrChunks.push(data);
+          console.error(`[AgentRunner] Claude CLI stderr (task ${taskId}):`, data.trim());
+        },
         ...(allowedTools ? { allowedTools } : {}),
         ...(mcpConfig ? { mcpServers: mcpConfig } : {}),
         ...(abortController ? { abortController } : {}),

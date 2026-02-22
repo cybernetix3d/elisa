@@ -20,7 +20,8 @@ export function useHealthCheck(enabled: boolean) {
 
   const fetchHealth = useCallback(async () => {
     try {
-      const res = await fetch('/api/health');
+      const base = import.meta.env.VITE_API_URL ?? '';
+      const res = await fetch(`${base}/api/health`);
       const data = await res.json();
       setHealth(data as HealthStatus);
     } catch {

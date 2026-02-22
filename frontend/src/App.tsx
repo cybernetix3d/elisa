@@ -223,13 +223,17 @@ export default function App() {
   const handleGo = async () => {
     if (!spec) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const api = (window as unknown as Record<string, any>).elisaAPI;
     let wp = workspacePath;
-    if (!wp) {
+    if (!wp && api?.pickDirectory) {
+      // Electron mode: ask user to pick a directory
       wp = await pickDirectory();
       if (!wp) return; // User cancelled
       setWorkspacePath(wp);
       localStorage.setItem(LS_WORKSPACE_PATH, wp);
     }
+    // Web mode: wp stays undefined — backend creates a temp directory
 
     lastToastIndexRef.current = -1;
     setCurrentToast(null);
@@ -629,7 +633,7 @@ export default function App() {
       {(nuggetDir || workspacePath) && uiState !== 'design' && (
         <div className="fixed bottom-32 right-4 z-30">
           <div className="glass-panel rounded-lg px-3 py-1.5 text-xs text-atelier-text-secondary max-w-xs truncate"
-               title={nuggetDir || workspacePath || ''}>
+            title={nuggetDir || workspacePath || ''}>
             Output: {nuggetDir || workspacePath}
           </div>
         </div>

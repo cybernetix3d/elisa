@@ -274,7 +274,7 @@ export function useBuildSession() {
         // Replace technical auth/key errors with kid-friendly messages
         let errorMsg = event.message;
         if (/auth|api.key|401|invalid.*key|invalid.*x-api-key/i.test(errorMsg)) {
-          errorMsg = 'Elisa can\'t connect to her AI brain. Ask your parent to check the API key!';
+          errorMsg = 'Zea can\'t connect to her AI brain. Ask your parent to check the API key!';
         }
         setErrorNotification({
           message: errorMsg,
@@ -283,7 +283,7 @@ export function useBuildSession() {
         });
         // Mark synthetic deploy node as failed if deploy-related error
         if (event.message.includes('flash') || event.message.includes('mpremote') ||
-            event.message.includes('Compilation failed') || event.message.includes('board detected')) {
+          event.message.includes('Compilation failed') || event.message.includes('board detected')) {
           setTasks(prev => {
             const next = prev.map(t =>
               t.id === '__deploy__' && t.status === 'in_progress' ? { ...t, status: 'failed' as const } : t
@@ -328,7 +328,7 @@ export function useBuildSession() {
     if (!res.ok) {
       const body = await res.json().catch(() => ({ detail: res.statusText }));
       setUiState('design');
-      setErrorNotification({ message: body.detail || 'Elisa couldn\'t get ready to build. Try again!', recoverable: true, timestamp: Date.now() });
+      setErrorNotification({ message: body.detail || 'Zea couldn\'t get ready to build. Try again!', recoverable: true, timestamp: Date.now() });
       return;
     }
     const { session_id } = await res.json();
@@ -351,7 +351,7 @@ export function useBuildSession() {
     });
     if (!startRes.ok) {
       const body = await startRes.json().catch(() => ({ detail: startRes.statusText }));
-      let message = body.detail || 'Elisa couldn\'t start building. Try again!';
+      let message = body.detail || 'Zea couldn\'t start building. Try again!';
       if (Array.isArray(body.errors) && body.errors.length > 0) {
         const fieldErrors = body.errors.map((e: { path: string; message: string }) =>
           e.path ? `${e.path}: ${e.message}` : e.message

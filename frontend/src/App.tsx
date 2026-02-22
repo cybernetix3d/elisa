@@ -27,15 +27,15 @@ import { playChime } from './lib/playChime';
 import { saveNuggetFile, loadNuggetFile, downloadBlob } from './lib/nuggetFile';
 import { setAuthToken, authFetch } from './lib/apiClient';
 import type { TeachingMoment } from './types';
-import elisaLogo from '../assets/elisa.svg';
+import zeaLogo from '../assets/zea.svg';
 import type { Skill, Rule } from './components/Skills/types';
 import type { Portal } from './components/Portals/types';
 
-const LS_WORKSPACE = 'elisa:workspace';
-const LS_SKILLS = 'elisa:skills';
-const LS_RULES = 'elisa:rules';
-const LS_PORTALS = 'elisa:portals';
-const LS_WORKSPACE_PATH = 'elisa:workspace-path';
+const LS_WORKSPACE = 'zea:workspace';
+const LS_SKILLS = 'zea:skills';
+const LS_RULES = 'zea:rules';
+const LS_PORTALS = 'zea:portals';
+const LS_WORKSPACE_PATH = 'zea:workspace-path';
 
 function readLocalStorageJson<T>(key: string): T | null {
   try {
@@ -402,8 +402,8 @@ export default function App() {
       <header className="relative z-10 flex items-center justify-between px-5 py-2 glass-panel border-t-0 border-x-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <img src={elisaLogo} alt="Elisa logo" className="h-9 w-auto drop-shadow-sm" />
-            <h1 className="text-xl font-display font-bold tracking-tight gradient-text-warm">Elisa</h1>
+            <img src={zeaLogo} alt="Zea logo" className="h-9 w-auto drop-shadow-sm" />
+            <h1 className="text-xl font-display font-bold tracking-tight gradient-text-warm">Zea</h1>
           </div>
           <MainTabBar
             activeTab={activeMainTab}
@@ -584,11 +584,11 @@ export default function App() {
               </div>
               <div>
                 <h3 className="font-semibold text-atelier-text mb-1">2. Add skills and rules</h3>
-                <p>Use the Skills sidebar to teach Elisa custom abilities and constraints.</p>
+                <p>Use the Skills sidebar to teach Zea custom abilities and constraints.</p>
               </div>
               <div>
                 <h3 className="font-semibold text-atelier-text mb-1">3. Press GO</h3>
-                <p>Elisa plans tasks, sends your minion squad, and builds your project automatically.</p>
+                <p>Zea plans tasks, sends your minion squad, and builds your project automatically.</p>
               </div>
               <div className="pt-2 border-t border-border-subtle">
                 <h3 className="font-semibold text-atelier-text mb-1">Sidebar</h3>

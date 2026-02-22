@@ -235,7 +235,7 @@ export class ExecutePhase {
       const msg = await this.deps.narratorService.translate('task_started', agentName, task.name ?? taskId, nuggetGoal);
       if (msg) {
         this.deps.narratorService.recordEmission(taskId);
-        await ctx.send({ type: 'narrator_message', from: 'Elisa', text: msg.text, mood: msg.mood, related_task_id: taskId });
+        await ctx.send({ type: 'narrator_message', from: 'Zea', text: msg.text, mood: msg.mood, related_task_id: taskId });
       }
     }
 
@@ -550,7 +550,7 @@ export class ExecutePhase {
         const msg = await this.deps.narratorService.translate('task_completed', agentName, result?.summary ?? '', nuggetGoal);
         if (msg) {
           this.deps.narratorService.recordEmission(taskId);
-          await ctx.send({ type: 'narrator_message', from: 'Elisa', text: msg.text, mood: msg.mood, related_task_id: taskId });
+          await ctx.send({ type: 'narrator_message', from: 'Zea', text: msg.text, mood: msg.mood, related_task_id: taskId });
         }
       }
 
@@ -585,7 +585,7 @@ export class ExecutePhase {
         const msg = await this.deps.narratorService.translate('task_failed', agentName, result?.summary ?? 'Unknown error', nuggetGoal);
         if (msg) {
           this.deps.narratorService.recordEmission(taskId);
-          await ctx.send({ type: 'narrator_message', from: 'Elisa', text: msg.text, mood: msg.mood, related_task_id: taskId });
+          await ctx.send({ type: 'narrator_message', from: 'Zea', text: msg.text, mood: msg.mood, related_task_id: taskId });
         }
       }
 
@@ -749,7 +749,7 @@ export class ExecutePhase {
 
     if (this.deps.git) {
       try {
-        const goal = (ctx.session.spec ?? {}).nugget?.goal ?? 'Elisa nugget';
+        const goal = (ctx.session.spec ?? {}).nugget?.goal ?? 'Zea nugget';
         await this.deps.git.initRepo(ctx.nuggetDir, goal);
       } catch {
         console.warn('Git not available, continuing without version control');
@@ -775,7 +775,7 @@ export class ExecutePhase {
       if (this.deps.narratorService) {
         const nuggetGoal = (ctx.session.spec ?? {}).nugget?.goal ?? '';
         this.deps.narratorService.accumulateOutput(taskId, content, agentName, nuggetGoal, async (msg) => {
-          await ctx.send({ type: 'narrator_message', from: 'Elisa', text: msg.text, mood: msg.mood, related_task_id: taskId });
+          await ctx.send({ type: 'narrator_message', from: 'Zea', text: msg.text, mood: msg.mood, related_task_id: taskId });
         });
       }
     };

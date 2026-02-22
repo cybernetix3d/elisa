@@ -326,8 +326,9 @@ export function startServer(
   pruneInterval.unref();
 
   return new Promise((resolve) => {
-    server.listen(port, '127.0.0.1', () => {
-      console.log(`Elisa backend listening on 127.0.0.1:${port}`);
+    const host = process.env.PORT ? '0.0.0.0' : '127.0.0.1';
+    server.listen(port, host, () => {
+      console.log(`Zea backend listening on ${host}:${port}`);
       console.log(`Auth token: ${token}`);
       validateStartupHealth().then(() => {
         console.log(`Health: API key=${healthStatus.apiKey}, SDK=${healthStatus.agentSdk}`);

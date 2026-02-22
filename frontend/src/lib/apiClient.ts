@@ -1,5 +1,7 @@
 let authToken: string | null = null;
 
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
+
 export function setAuthToken(token: string | null) {
   authToken = token;
 }
@@ -17,7 +19,8 @@ export function authHeaders(): HeadersInit {
 }
 
 export function authFetch(url: string, init?: RequestInit): Promise<Response> {
-  return fetch(url, {
+  const fullUrl = API_BASE ? `${API_BASE}${url}` : url;
+  return fetch(fullUrl, {
     ...init,
     headers: {
       ...authHeaders(),

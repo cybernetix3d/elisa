@@ -57,11 +57,11 @@ export default function PlanningIndicator() {
         }
       `}</style>
 
-      {/* Animated orbit with Elisa center and minion dots */}
+      {/* Animated orbit with Zea center and minion dots */}
       <div className="relative w-32 h-32">
-        {/* Center: Elisa avatar */}
+        {/* Center: Zea avatar */}
         <div className="absolute inset-0 flex items-center justify-center planning-center">
-          <MinionAvatar name="Elisa" role="narrator" status="working" size="lg" />
+          <MinionAvatar name="Zea" role="narrator" status="working" size="lg" />
         </div>
 
         {/* Orbiting dots representing future minions */}

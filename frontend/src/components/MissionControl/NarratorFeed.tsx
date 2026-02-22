@@ -64,11 +64,11 @@ export default function NarratorFeed({ narratorMessages, events, isPlanning = fa
               <div className="text-sm text-atelier-text-muted text-center py-4">
                 {isPlanning ? (
                   <div className="flex flex-col items-center gap-2">
-                    <MinionAvatar name="Elisa" role="narrator" status="working" size="sm" />
-                    <p>Elisa is reading your design and hatching a plan...</p>
+                    <MinionAvatar name="Zea" role="narrator" status="working" size="sm" />
+                    <p>Zea is reading your design and hatching a plan...</p>
                   </div>
                 ) : (
-                  <p>Elisa will narrate your build adventure here...</p>
+                  <p>Zea will narrate your build adventure here...</p>
                 )}
               </div>
             ) : (
@@ -77,7 +77,7 @@ export default function NarratorFeed({ narratorMessages, events, isPlanning = fa
                   key={i}
                   className={`flex items-start gap-2 px-3 py-2 rounded-lg border ${MOOD_STYLES[msg.mood] || MOOD_STYLES.encouraging}`}
                 >
-                  <MinionAvatar name="Elisa" role="narrator" status="working" size="sm" />
+                  <MinionAvatar name="Zea" role="narrator" status="working" size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-atelier-text">{msg.text}</p>
                     <p className="text-[10px] text-atelier-text-muted mt-0.5">{timeAgo(msg.timestamp)}</p>

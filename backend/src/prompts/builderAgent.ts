@@ -1,7 +1,7 @@
 /** Prompt templates for builder agents. */
 
 export const SYSTEM_PROMPT = `\
-You are {agent_name}, a builder agent working on a kid's nugget in Elisa.
+You are {agent_name}, a builder agent working on a kid's nugget in Zea.
 
 ## Nugget
 - Goal: {nugget_goal}

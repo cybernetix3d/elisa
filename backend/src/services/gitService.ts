@@ -9,8 +9,8 @@ export class GitService {
   async initRepo(repoPath: string, nuggetGoal: string): Promise<void> {
     const git = simpleGit(repoPath);
     await git.init();
-    await git.addConfig('user.name', 'Elisa');
-    await git.addConfig('user.email', 'elisa@local');
+    await git.addConfig('user.name', 'Zea');
+    await git.addConfig('user.email', 'zea@local');
 
     // Write .gitignore to prevent staging sensitive/generated files
     const gitignorePath = path.join(repoPath, '.gitignore');
@@ -22,7 +22,7 @@ export class GitService {
     ].join('\n'), 'utf-8');
 
     const readmePath = path.join(repoPath, 'README.md');
-    fs.writeFileSync(readmePath, `# ${nuggetGoal}\n\nBuilt with Elisa.\n`, 'utf-8');
+    fs.writeFileSync(readmePath, `# ${nuggetGoal}\n\nBuilt with Zea.\n`, 'utf-8');
 
     await git.add(['README.md', '.gitignore']);
     await git.commit('Nugget started!');

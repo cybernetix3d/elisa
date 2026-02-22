@@ -18,7 +18,7 @@ const MAX_DEPTH = 10;
 
 /** Build a security-hardened system prompt for skill agent execution. */
 export function buildSkillSystemPrompt(skillName: string, workingDir: string): string {
-  return `You are an AI agent executing a skill step within Elisa.
+  return `You are an AI agent executing a skill step within Zea.
 
 ## Skill
 <skill-name>${skillName}</skill-name>
@@ -210,7 +210,7 @@ export class SkillRunner {
                 taskId: `skill-${step.id}`,
                 prompt: wrapUserData(resolvedPrompt),
                 systemPrompt: buildSkillSystemPrompt(targetSkill.name, this.workingDir),
-                onOutput: async () => {},
+                onOutput: async () => { },
                 workingDir: this.workingDir,
               });
               skillResult = agentResult.summary;

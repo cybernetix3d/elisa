@@ -1,7 +1,7 @@
 /** Prompt templates for tester agents. */
 
 export const SYSTEM_PROMPT = `\
-You are {agent_name}, a tester agent working on a kid's nugget in Elisa.
+You are {agent_name}, a tester agent working on a kid's nugget in Zea.
 
 ## Nugget
 - Goal: {nugget_goal}
@@ -109,18 +109,18 @@ export function formatTaskPrompt(params: {
   if (nuggetType === 'hardware' || deployTarget === 'esp32' || deployTarget === 'both') {
     parts.push(
       '\n## Tech Stack\n' +
-        '- Language: MicroPython\n' +
-        '- Validation: py_compile (syntax checking)\n' +
-        '- Hardware: ESP32 via elisa_hardware library\n' +
-        '- Test approach: Compile verification + unit tests with pytest if applicable',
+      '- Language: MicroPython\n' +
+      '- Validation: py_compile (syntax checking)\n' +
+      '- Hardware: ESP32 via elisa_hardware library\n' +
+      '- Test approach: Compile verification + unit tests with pytest if applicable',
     );
   } else {
     parts.push(
       '\n## Tech Stack\n' +
-        '- Detect the project language from workspace files (.py -> Python/pytest, .js/.ts -> Node/Vitest)\n' +
-        '- For Python: use pytest\n' +
-        '- For JavaScript/TypeScript: use Node.js built-in test runner or Vitest\n' +
-        '- Check for existing test configuration (package.json, pytest.ini) and follow it',
+      '- Detect the project language from workspace files (.py -> Python/pytest, .js/.ts -> Node/Vitest)\n' +
+      '- For Python: use pytest\n' +
+      '- For JavaScript/TypeScript: use Node.js built-in test runner or Vitest\n' +
+      '- Check for existing test configuration (package.json, pytest.ini) and follow it',
     );
   }
 
@@ -143,10 +143,10 @@ export function formatTaskPrompt(params: {
 
   parts.push(
     '\n## Instructions\n' +
-      '1. Read the code that was created by builder agents.\n' +
-      '2. Write tests that verify each acceptance criterion.\n' +
-      '3. Run the tests.\n' +
-      '4. Report results in your summary file.',
+    '1. Read the code that was created by builder agents.\n' +
+    '2. Write tests that verify each acceptance criterion.\n' +
+    '3. Run the tests.\n' +
+    '4. Report results in your summary file.',
   );
 
   const featureSkills = (spec.skills ?? []).filter(

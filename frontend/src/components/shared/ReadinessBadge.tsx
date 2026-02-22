@@ -7,7 +7,7 @@ interface ReadinessBadgeProps {
 
 function friendlyMessage(health: HealthStatus): string {
   if (health.status === 'ready') return 'Ready to build!';
-  if (health.status === 'offline') return 'Elisa can\'t find the backend server.';
+  if (health.status === 'offline') return 'Zea can\'t find the backend server.';
   if (health.apiKey === 'missing') return 'No API key found. Ask your parent to add one!';
   if (health.apiKey === 'invalid') return 'That API key didn\'t work. Ask your parent to check it!';
   if (health.agentSdk === 'not_found') return 'Agent SDK not installed. Try running npm install.';

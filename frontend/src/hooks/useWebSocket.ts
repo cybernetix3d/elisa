@@ -26,11 +26,23 @@ export function useWebSocket({ sessionId, onEvent }: UseWebSocketOptions) {
   const connect = useCallback(() => {
     if (!sessionId) return;
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const token = getAuthToken();
-    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
-    const url = `${protocol}//${window.location.host}/ws/session/${sessionId}${tokenParam}`;
-    const ws = new WebSocket(url);
+    const apiUrl = import.meta.env.VITE_API_URL;
+    let wsUrl: string;
+    if (apiUrl) {
+      // Remote backend: derive WS URL from VITE_API_URL
+      const parsed = new URL(apiUrl);
+      const protocol = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
+      const token = getAuthToken();
+      const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
+      wsUrl = `${protocol}//${parsed.host}/ws/session/${sessionId}${tokenParam}`;
+    } else {
+      // Same-origin (dev / Electron)
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const token = getAuthToken();
+      const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
+      wsUrl = `${protocol}//${window.location.host}/ws/session/${sessionId}${tokenParam}`;
+    }
+    const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
       retriesRef.current = 0;

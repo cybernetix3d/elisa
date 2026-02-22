@@ -9,7 +9,7 @@ interface MinionSquadPanelProps {
 }
 
 export default function MinionSquadPanel({ agents, uiState, isPlanning = false }: MinionSquadPanelProps) {
-  // Derive Elisa's status from build state
+  // Derive Zea's status from build state
   const elisaStatus = uiState === 'building' || uiState === 'review'
     ? 'working'
     : uiState === 'done'
@@ -22,10 +22,10 @@ export default function MinionSquadPanel({ agents, uiState, isPlanning = false }
         {TERMS.agentTeam}
       </h3>
       <div className="flex items-end justify-center gap-4 flex-wrap">
-        {/* Elisa -- virtual narrator member, always central */}
+        {/* Zea -- virtual narrator member, always central */}
         <div className="flex flex-col items-center gap-1">
-          <MinionAvatar name="Elisa" role="narrator" status={elisaStatus} size="lg" />
-          <span className="text-xs font-medium text-atelier-text">Elisa</span>
+          <MinionAvatar name="Zea" role="narrator" status={elisaStatus} size="lg" />
+          <span className="text-xs font-medium text-atelier-text">Zea</span>
           <span className="text-[10px] text-atelier-text-muted">{displayRole('narrator')}</span>
         </div>
 

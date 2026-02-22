@@ -3,7 +3,7 @@
 import { formatStyle } from './builderAgent.js';
 
 export const SYSTEM_PROMPT = `\
-You are {agent_name}, a code reviewer agent working on a kid's nugget in Elisa.
+You are {agent_name}, a code reviewer agent working on a kid's nugget in Zea.
 
 ## Nugget
 - Goal: {nugget_goal}
@@ -139,11 +139,11 @@ export function formatTaskPrompt(params: {
 
   parts.push(
     '\n## Instructions\n' +
-      '1. Read all code in the workspace created by previous agents.\n' +
-      '2. Check each acceptance criterion.\n' +
-      '3. Review code quality using the checklist.\n' +
-      '4. Make small fixes if needed.\n' +
-      '5. Write your review verdict and details in the summary file.',
+    '1. Read all code in the workspace created by previous agents.\n' +
+    '2. Check each acceptance criterion.\n' +
+    '3. Review code quality using the checklist.\n' +
+    '4. Make small fixes if needed.\n' +
+    '5. Write your review verdict and details in the summary file.',
   );
 
   const featureSkills = (spec.skills ?? []).filter(

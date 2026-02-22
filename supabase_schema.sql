@@ -10,7 +10,7 @@ CREATE TABLE public.user_profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT NOT NULL,
     anthropic_api_key TEXT,
-    preferred_model TEXT DEFAULT 'claude-3-7-sonnet-20250219',
+    preferred_model TEXT DEFAULT 'claude-opus-4-6',
     vercel_token TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL

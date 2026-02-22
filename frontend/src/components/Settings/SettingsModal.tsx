@@ -9,7 +9,7 @@ interface SettingsModalProps {
 export function SettingsModal({ onClose }: SettingsModalProps) {
     const [apiKey, setApiKey] = useState('');
     const [vercelToken, setVercelToken] = useState('');
-    const [model, setModel] = useState('claude-3-7-sonnet-20250219');
+    const [model, setModel] = useState('claude-opus-4-6');
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -31,7 +31,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                 } else if (data) {
                     setApiKey(data.anthropic_api_key || '');
                     setVercelToken(data.vercel_token || '');
-                    setModel(data.preferred_model || 'claude-3-7-sonnet-20250219');
+                    setModel(data.preferred_model || 'claude-opus-4-6');
                 }
             } catch (err) {
                 console.error('Exception loading profile', err);
@@ -129,9 +129,9 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                                 onChange={(e) => setModel(e.target.value)}
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             >
-                                <option value="claude-3-7-sonnet-20250219">Claude 3.7 Sonnet</option>
-                                <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
-                                <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+                                <option value="claude-opus-4-6">Claude Opus 4.6</option>
+                                <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
+                                <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
                             </select>
                         </div>
 

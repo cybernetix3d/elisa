@@ -61,6 +61,10 @@ export default function App() {
   const { health, loading: healthLoading } = useHealthCheck(uiState === 'design');
   const { boardInfo, justConnected, acknowledgeConnection } = useBoardDetect(uiState === 'design');
 
+  // Detect Electron vs pure web mode
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isElectron = !!(window as unknown as Record<string, any>).elisaAPI;
+
   // Fetch auth token on mount
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -70,7 +74,7 @@ export default function App() {
         if (token) setAuthToken(token);
       });
     } else {
-      // Dev mode without Electron: use dev default
+      // Web mode: use dev default token
       setAuthToken('dev-token');
     }
   }, []);
@@ -244,8 +248,8 @@ export default function App() {
   const handleSaveNugget = async () => {
     if (!workspaceJson) return;
 
-    // If workspace path is set, save design files to workspace via backend
-    if (workspacePath) {
+    // Electron mode with workspace path: save to filesystem
+    if (isElectron && workspacePath) {
       try {
         await authFetch('/api/workspace/save', {
           method: 'POST',
@@ -263,7 +267,7 @@ export default function App() {
       return;
     }
 
-    // No workspace path: fall back to .elisa ZIP download
+    // Web mode or no workspace path: download as .elisa ZIP
     let outputArchive: Blob | undefined;
     if (sessionId) {
       try {
@@ -281,6 +285,23 @@ export default function App() {
       ? spec.nugget.goal.slice(0, 40).replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+$/, '')
       : 'nugget';
     downloadBlob(blob, `${name}.elisa`);
+  };
+
+  // -- Download Project ZIP (web mode) --
+  const handleDownloadProject = async () => {
+    if (!sessionId) return;
+    try {
+      const resp = await authFetch(`/api/sessions/${sessionId}/export`);
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const name = spec?.nugget.goal
+          ? spec.nugget.goal.slice(0, 40).replace(/[^a-zA-Z0-9]+/g, '-').replace(/-+$/, '')
+          : 'project';
+        downloadBlob(blob, `${name}.zip`);
+      }
+    } catch {
+      // download failed
+    }
   };
 
   // -- Open Nugget --
@@ -448,9 +469,9 @@ export default function App() {
             onPortals={() => setPortalsModalOpen(true)}
             onExamples={() => setExamplePickerOpen(true)}
             onHelp={() => setHelpOpen(true)}
-            onFolder={handleOpenFolder}
+            onFolder={isElectron ? handleOpenFolder : undefined}
             saveDisabled={!workspaceJson}
-            workspacePath={workspacePath}
+            workspacePath={isElectron ? workspacePath : undefined}
           />
           <div className="flex-1 relative">
             <BlockCanvas
@@ -629,8 +650,8 @@ export default function App() {
         </div>
       )}
 
-      {/* Workspace path indicator */}
-      {(nuggetDir || workspacePath) && uiState !== 'design' && (
+      {/* Workspace path indicator (Electron only) */}
+      {isElectron && (nuggetDir || workspacePath) && uiState !== 'design' && (
         <div className="fixed bottom-32 right-4 z-30">
           <div className="glass-panel rounded-lg px-3 py-1.5 text-xs text-atelier-text-secondary max-w-xs truncate"
             title={nuggetDir || workspacePath || ''}>
@@ -670,10 +691,19 @@ export default function App() {
                   Open in Browser
                 </a>
               )}
+              {sessionId && (
+                <button
+                  onClick={handleDownloadProject}
+                  className="go-btn px-6 py-2.5 rounded-xl text-sm cursor-pointer"
+                >
+                  📦 Download Project
+                </button>
+              )}
               <button
                 onClick={() => {
                   if (sessionId) {
-                    navigator.sendBeacon(`/api/sessions/${sessionId}/stop`, '');
+                    const base = import.meta.env.VITE_API_URL ?? '';
+                    navigator.sendBeacon(`${base}/api/sessions/${sessionId}/stop`, '');
                   }
                   window.location.reload();
                 }}

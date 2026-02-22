@@ -110,17 +110,20 @@ function createApp(staticDir?: string, authToken?: string) {
   const app = express();
   app.use(express.json({ limit: '1mb' }));
 
-  // CORS: only needed in dev mode (frontend on separate origin)
-  if (!staticDir) {
-    const corsOrigin = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
-    app.use((_req, res, next) => {
-      res.header('Access-Control-Allow-Origin', corsOrigin);
-      res.header('Access-Control-Allow-Credentials', 'true');
-      res.header('Access-Control-Allow-Methods', '*');
-      res.header('Access-Control-Allow-Headers', '*');
-      next();
-    });
-  }
+  // CORS: needed when frontend and backend are on different origins
+  // (dev mode with Vite proxy, or Vercel + Railway split deployment)
+  const corsOrigin = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
+  app.use((_req, res, next) => {
+    res.header('Access-Control-Allow-Origin', corsOrigin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (_req.method === 'OPTIONS') {
+      res.sendStatus(200);
+      return;
+    }
+    next();
+  });
 
   // Health (no auth required)
   app.get('/api/health', async (_req, res) => {

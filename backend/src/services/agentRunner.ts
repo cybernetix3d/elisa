@@ -22,6 +22,7 @@ export interface AgentRunnerParams {
   workingDir: string;
   timeout?: number;
   model?: string;
+  apiKey?: string;
   maxTurns?: number;
   mcpServers?: Array<{ name: string; command: string; args?: string[]; env?: Record<string, string> }>;
   allowedTools?: string[];
@@ -38,6 +39,7 @@ export class AgentRunner {
       workingDir,
       timeout = 300,
       model = process.env.CLAUDE_MODEL || 'claude-opus-4-6',
+      apiKey,
       maxTurns = MAX_TURNS_DEFAULT,
       mcpServers,
       allowedTools,
@@ -63,7 +65,7 @@ export class AgentRunner {
 
     try {
       return await withTimeout(
-        this.runQuery(prompt, systemPrompt, workingDir, taskId, onOutput, model, maxTurns, mcpConfig, abortController, allowedTools),
+        this.runQuery(prompt, systemPrompt, workingDir, taskId, onOutput, model, apiKey, maxTurns, mcpConfig, abortController, allowedTools),
         timeout * 1000,
       );
     } catch (err: any) {
@@ -95,6 +97,7 @@ export class AgentRunner {
     taskId: string,
     onOutput: (taskId: string, content: string) => Promise<void>,
     model: string,
+    apiKey: string | undefined,
     maxTurns: number,
     mcpConfig?: Record<string, any>,
     abortController?: AbortController,
@@ -111,6 +114,10 @@ export class AgentRunner {
         cwd,
         model,
         maxTurns,
+        env: {
+          ...process.env,
+          ...(apiKey ? { ANTHROPIC_API_KEY: apiKey } : {}),
+        },
         permissionMode: 'bypassPermissions',
         systemPrompt,
         stderr: (data: string) => {

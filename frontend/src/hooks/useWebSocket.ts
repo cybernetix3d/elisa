@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import type { WSEvent } from '../types';
 import { getAuthToken } from '../lib/apiClient';
+import { supabase } from '../lib/supabase';
 
 interface UseWebSocketOptions {
   sessionId: string | null;
@@ -23,8 +24,11 @@ export function useWebSocket({ sessionId, onEvent }: UseWebSocketOptions) {
 
   useEffect(() => { onEventRef.current = onEvent; });
 
-  const connect = useCallback(() => {
+  const connect = useCallback(async () => {
     if (!sessionId) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token || getAuthToken();
 
     const apiUrl = import.meta.env.VITE_API_URL;
     let wsUrl: string;
@@ -32,13 +36,11 @@ export function useWebSocket({ sessionId, onEvent }: UseWebSocketOptions) {
       // Remote backend: derive WS URL from VITE_API_URL
       const parsed = new URL(apiUrl);
       const protocol = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
-      const token = getAuthToken();
       const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
       wsUrl = `${protocol}//${parsed.host}/ws/session/${sessionId}${tokenParam}`;
     } else {
       // Same-origin (dev / Electron)
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const token = getAuthToken();
       const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
       wsUrl = `${protocol}//${window.location.host}/ws/session/${sessionId}${tokenParam}`;
     }

@@ -398,6 +398,7 @@ export class ExecutePhase {
         onQuestion: this.makeQuestionHandler(ctx, taskId),
         workingDir: ctx.nuggetDir,
         model: process.env.CLAUDE_MODEL || DEFAULT_MODEL,
+        apiKey: ctx.apiKey,
         maxTurns,
         allowedTools: [
           'Read', 'Write', 'Edit', 'MultiEdit',

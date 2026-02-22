@@ -1,6 +1,7 @@
 /** Express + WebSocket server -- thin composition root. */
 
 import 'dotenv/config';
+import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
@@ -14,6 +15,7 @@ import { createSessionRouter } from './routes/sessions.js';
 import { createHardwareRouter } from './routes/hardware.js';
 import { createSkillRouter } from './routes/skills.js';
 import { createWorkspaceRouter } from './routes/workspace.js';
+import { requireSupabaseAuth, supabase } from './middleware/authMiddleware.js';
 
 // -- State --
 
@@ -153,17 +155,10 @@ function createApp(staticDir?: string, authToken?: string) {
   });
 
   // Auth middleware for all other /api/* routes
-  if (authToken) {
-    app.use('/api', (req, res, next) => {
-      if (req.method === 'OPTIONS') { next(); return; }
-      const header = req.headers.authorization;
-      if (!header || header !== `Bearer ${authToken}`) {
-        res.status(401).json({ detail: 'Unauthorized' });
-        return;
-      }
-      next();
-    });
-  }
+  app.use('/api', (req, res, next) => {
+    if (req.method === 'OPTIONS') { next(); return; }
+    requireSupabaseAuth(req as any, res, next);
+  });
 
   // Dev-mode: accept API key from Electron process (which stores it encrypted)
   if (!staticDir) {
@@ -195,6 +190,28 @@ function createApp(staticDir?: string, authToken?: string) {
   app.use('/api/skills', createSkillRouter({ store, sendEvent }));
   app.use('/api/hardware', createHardwareRouter({ store, hardwareService }));
   app.use('/api/workspace', createWorkspaceRouter());
+
+  // Web Deploy Preview Route (unauthenticated so iframes can load it without headers, secured by UUID)
+  app.use('/preview/:id', (req, res, next) => {
+    const entry = store.get(req.params.id);
+    if (!entry || !entry.orchestrator) {
+      res.status(404).send('Preview not available');
+      return;
+    }
+
+    const nuggetDir = entry.orchestrator.nuggetDir;
+    const candidates = ['dist', 'build', 'public', 'src', '.'];
+    let serveDir = nuggetDir;
+    for (const dir of candidates) {
+      const full = dir === '.' ? nuggetDir : path.join(nuggetDir, dir);
+      if (fs.existsSync(path.join(full, 'index.html'))) {
+        serveDir = full;
+        break;
+      }
+    }
+
+    express.static(serveDir)(req, res, next);
+  });
 
   // Templates
   app.get('/api/templates', (_req, res) => {
@@ -275,22 +292,40 @@ export function startServer(
 
     // Check auth token from query parameter
     const wsToken = url.searchParams.get('token');
-    if (wsToken !== token) {
-      socket.destroy();
-      return;
-    }
 
-    const sessionId = match[1];
-    if (!store.has(sessionId)) {
-      socket.destroy();
-      return;
-    }
+    const authenticateWs = async () => {
+      const isLocalToken = wsToken === process.env.ELISA_AUTH_TOKEN && process.env.ELISA_AUTH_TOKEN !== undefined;
+      // Also allow the fallback generic token if passed (for dev)
+      if (isLocalToken || wsToken === token) return true;
+      if (!wsToken) return false;
 
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      manager.connect(sessionId, ws);
-      ws.on('close', () => manager.disconnect(sessionId, ws));
-      ws.on('message', () => {
-        // Client keepalive; ignore content
+      try {
+        const { data, error } = await supabase.auth.getUser(wsToken);
+        if (error || !data.user) return false;
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    authenticateWs().then((isAuthenticated) => {
+      if (!isAuthenticated) {
+        socket.destroy();
+        return;
+      }
+
+      const sessionId = match[1];
+      if (!store.has(sessionId)) {
+        socket.destroy();
+        return;
+      }
+
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        manager.connect(sessionId, ws);
+        ws.on('close', () => manager.disconnect(sessionId, ws));
+        ws.on('message', () => {
+          // Client keepalive; ignore content
+        });
       });
     });
   });

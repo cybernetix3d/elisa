@@ -53,6 +53,7 @@ export class SkillRunner {
   private send: SendEvent;
   private allSkills: SkillSpec[];
   private agentRunner: AgentRunner;
+  private apiKey?: string;
   private workingDir: string;
   private questionResolvers = new Map<string, (answers: Record<string, any>) => void>();
   private callStack: string[] = [];
@@ -61,11 +62,13 @@ export class SkillRunner {
     send: SendEvent,
     allSkills: SkillSpec[],
     agentRunner: AgentRunner,
+    apiKey?: string,
     workingDir?: string,
   ) {
     this.send = send;
     this.allSkills = allSkills;
     this.agentRunner = agentRunner;
+    this.apiKey = apiKey;
     this.workingDir = workingDir ?? createSandboxDir();
   }
 
@@ -212,6 +215,7 @@ export class SkillRunner {
                 systemPrompt: buildSkillSystemPrompt(targetSkill.name, this.workingDir),
                 onOutput: async () => { },
                 workingDir: this.workingDir,
+                apiKey: this.apiKey,
               });
               skillResult = agentResult.summary;
             }
@@ -243,6 +247,7 @@ export class SkillRunner {
                 });
               },
               workingDir: this.workingDir,
+              apiKey: this.apiKey,
             });
 
             context.entries[step.storeAs] = agentResult.summary;

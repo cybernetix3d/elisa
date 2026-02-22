@@ -30,6 +30,12 @@ import type { TeachingMoment } from './types';
 import zeaLogo from '../assets/zea.svg';
 import type { Skill, Rule } from './components/Skills/types';
 import type { Portal } from './components/Portals/types';
+import { AuthModal } from './components/Auth/AuthModal';
+import { SettingsModal } from './components/Settings/SettingsModal';
+import { ProjectsModal } from './components/Projects/ProjectsModal';
+import { SaveProjectModal } from './components/Projects/SaveProjectModal';
+import { supabase } from './lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 
 const LS_WORKSPACE = 'zea:workspace';
 const LS_SKILLS = 'zea:skills';
@@ -49,6 +55,8 @@ function readLocalStorageJson<T>(key: string): T | null {
 
 export default function App() {
   const [spec, setSpec] = useState<NuggetSpec | null>(null);
+  const [supabaseSession, setSupabaseSession] = useState<Session | null>(null);
+
   const {
     uiState, tasks, agents, commits, events, sessionId,
     teachingMoments, testResults, coveragePct, tokenUsage,
@@ -79,6 +87,19 @@ export default function App() {
       // Web mode: use dev default token
       setAuthToken('dev-token');
     }
+
+    // Set up Supabase auth listener
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSupabaseSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSupabaseSession(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Main tab state
@@ -91,6 +112,10 @@ export default function App() {
   const [skillsModalOpen, setSkillsModalOpen] = useState(false);
   const [rulesModalOpen, setRulesModalOpen] = useState(false);
   const [portalsModalOpen, setPortalsModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [projectsModalOpen, setProjectsModalOpen] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [boardDetectedModalOpen, setBoardDetectedModalOpen] = useState(false);
   const boardDismissedPortsRef = useRef<Set<string>>(new Set());
@@ -241,6 +266,17 @@ export default function App() {
     }
     // Web mode: wp stays undefined — backend creates a temp directory
 
+    // Save to cloud on build start implicitly if already tracking a project
+    if (!isElectron && supabaseSession && currentProjectId && workspaceJson) {
+      supabase.from('projects').update({
+        workspace: workspaceJson,
+        skills,
+        rules,
+        portals,
+        updated_at: new Date().toISOString()
+      }).eq('id', currentProjectId).then(() => { });
+    }
+
     lastToastIndexRef.current = -1;
     setCurrentToast(null);
     await startBuild(spec, waitForOpen, wp ?? undefined, workspaceJson ?? undefined);
@@ -269,7 +305,28 @@ export default function App() {
       return;
     }
 
-    // Web mode or no workspace path: download as .elisa ZIP
+    // Web mode: save to Supabase
+    if (!isElectron && supabaseSession) {
+      if (currentProjectId) {
+        try {
+          const { error } = await supabase.from('projects').update({
+            workspace: workspaceJson,
+            skills,
+            rules,
+            portals,
+            updated_at: new Date().toISOString()
+          }).eq('id', currentProjectId);
+          if (error) throw error;
+        } catch (err) {
+          console.error('Failed to update project:', err);
+        }
+      } else {
+        setSaveModalOpen(true);
+      }
+      return;
+    }
+
+    // Export local or fallback to file downlaod Zip for non-supabase users
     let outputArchive: Blob | undefined;
     if (sessionId) {
       try {
@@ -303,6 +360,26 @@ export default function App() {
       }
     } catch {
       // download failed
+    }
+  };
+
+  // -- Handle New Cloud Save --
+  const handleSaveCloudProject = async (name: string) => {
+    if (!supabaseSession) return;
+    try {
+      const { data, error } = await supabase.from('projects').insert({
+        user_id: supabaseSession.user.id,
+        name,
+        workspace: workspaceJson,
+        skills,
+        rules,
+        portals,
+      }).select('id').single();
+
+      if (error) throw error;
+      if (data) setCurrentProjectId(data.id);
+    } catch (err) {
+      console.error('Failed to save project to cloud', err);
     }
   };
 
@@ -425,6 +502,11 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen atelier-bg noise-overlay text-atelier-text">
+      {/* Auth Modal Wall (Web Mode Only) */}
+      {!isElectron && !supabaseSession && (
+        <AuthModal onSuccess={() => { }} />
+      )}
+
       {/* Header: Logo | MainTabBar | GO button | ReadinessBadge */}
       <header className="relative z-10 flex items-center justify-between px-5 py-2 glass-panel border-t-0 border-x-0">
         <div className="flex items-center gap-4">
@@ -440,6 +522,14 @@ export default function App() {
           />
         </div>
         <div className="flex items-center gap-3">
+          {!isElectron && supabaseSession && (
+            <button
+              onClick={() => setSettingsModalOpen(true)}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+            >
+              Settings
+            </button>
+          )}
           <GoButton
             disabled={uiState !== 'design' || !spec?.nugget.goal || health.status !== 'ready'}
             onClick={handleGo}
@@ -464,7 +554,10 @@ export default function App() {
         {/* Workspace tab: sidebar + BlockCanvas (always mounted, hidden when not active) */}
         <div className={activeMainTab === 'workspace' ? 'flex w-full h-full' : 'hidden'}>
           <WorkspaceSidebar
-            onOpen={() => fileInputRef.current?.click()}
+            onOpen={() => {
+              if (isElectron || !supabaseSession) fileInputRef.current?.click();
+              else setProjectsModalOpen(true);
+            }}
             onSave={handleSaveNugget}
             onSkills={() => setSkillsModalOpen(true)}
             onRules={() => setRulesModalOpen(true)}
@@ -538,6 +631,37 @@ export default function App() {
           questions={questionRequest.questions}
           sessionId={sessionId}
           onClose={clearQuestionRequest}
+        />
+      )}
+
+      {/* Settings modal */}
+      {settingsModalOpen && (
+        <SettingsModal onClose={() => setSettingsModalOpen(false)} />
+      )}
+
+      {/* Modals for Cloud Projects */}
+      {projectsModalOpen && (
+        <ProjectsModal
+          onClose={() => setProjectsModalOpen(false)}
+          onLoad={(project, id) => {
+            setCurrentProjectId(id);
+            setWorkspaceJson(project.workspace);
+            setSkills(project.skills || []);
+            setRules(project.rules || []);
+            setPortals(project.portals || []);
+            blockCanvasRef.current?.loadWorkspace(project.workspace);
+            localStorage.setItem(LS_WORKSPACE, JSON.stringify(project.workspace));
+            localStorage.setItem(LS_SKILLS, JSON.stringify(project.skills || []));
+            localStorage.setItem(LS_RULES, JSON.stringify(project.rules || []));
+            localStorage.setItem(LS_PORTALS, JSON.stringify(project.portals || []));
+          }}
+        />
+      )}
+      {saveModalOpen && (
+        <SaveProjectModal
+          defaultName={spec?.nugget.goal?.slice(0, 40) || 'Untitled Project'}
+          onClose={() => setSaveModalOpen(false)}
+          onSave={handleSaveCloudProject}
         />
       )}
 

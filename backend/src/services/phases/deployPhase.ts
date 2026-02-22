@@ -84,73 +84,49 @@ export class DeployPhase {
       }
     }
 
-    // Find directory to serve: dist/ > build/ > public/ > src/ > .
-    const candidates = ['dist', 'build', 'public', 'src', '.'];
-    let serveDir = ctx.nuggetDir;
-    for (const dir of candidates) {
-      const full = dir === '.' ? ctx.nuggetDir : path.join(ctx.nuggetDir, dir);
-      if (fs.existsSync(path.join(full, 'index.html'))) {
-        serveDir = full;
-        break;
+    await ctx.send({ type: 'deploy_progress', step: 'Preparing preview URL...', progress: 80 });
+
+    let finalUrl = `/preview/${ctx.session.id}`;
+
+    // Vercel Deployment
+    if (ctx.vercelToken) {
+      await ctx.send({ type: 'deploy_progress', step: 'Deploying to Vercel...', progress: 90 });
+      try {
+        const isWin = process.platform === 'win32';
+        const vercelUrl = await new Promise<string>((resolve, reject) => {
+          const vProc = spawn('npx', ['vercel', '--yes', '--prod', `--token=${ctx.vercelToken}`], {
+            cwd: ctx.nuggetDir,
+            stdio: 'pipe',
+            shell: isWin,
+            env: safeEnv(),
+          });
+          let out = '';
+          vProc.stdout?.on('data', (d: Buffer) => { out += d.toString(); });
+          vProc.stderr?.on('data', (d: Buffer) => { out += d.toString(); });
+          vProc.on('close', (code) => {
+            if (code === 0) {
+              const matches = out.match(/https:\/\/[a-zA-Z0-9-]+\.vercel\.app/g);
+              if (matches && matches.length > 0) resolve(matches[matches.length - 1]);
+              else resolve(finalUrl); // Fallback to local
+            } else {
+              reject(new Error(`Vercel CLI failed (exit ${code}): ${out.slice(0, 500)}`));
+            }
+          });
+          vProc.on('error', reject);
+        });
+
+        if (vercelUrl && vercelUrl !== finalUrl) {
+          finalUrl = vercelUrl;
+          await ctx.send({ type: 'deploy_progress', step: 'Vercel deployment successful!', progress: 100 });
+        }
+      } catch (err: any) {
+        console.warn('Vercel deployment failed:', err);
+        await ctx.send({ type: 'deploy_progress', step: `Vercel deploy warning: ${err.message}`, progress: 95 });
       }
     }
 
-    await ctx.send({ type: 'deploy_progress', step: 'Finding free port...', progress: 60 });
-    const port = await findFreePort(3000);
-
-    await ctx.send({ type: 'deploy_progress', step: `Starting local server on port ${port}...`, progress: 80 });
-
-    let serverProcess: ChildProcess | null = null;
-    let finalUrl: string | null = null;
-    const fallbackUrl = `http://localhost:${port}`;
-    const isWin = process.platform === 'win32';
-
-    try {
-      serverProcess = spawn('npx', ['serve', '-p', String(port)], {
-        cwd: serveDir,
-        stdio: 'pipe',
-        detached: false,
-        shell: isWin,
-        env: safeEnv(),
-      });
-
-      // Wait for server to start and parse actual URL from output.
-      // Serve v14 may silently switch ports if the requested port is taken.
-      const result = await new Promise<{ started: boolean; url: string | null }>((resolve) => {
-        let resolved = false;
-        const urlPattern = /Accepting connections at (http:\/\/localhost:\d+)/;
-
-        const checkOutput = (data: Buffer) => {
-          const match = data.toString().match(urlPattern);
-          if (match && !resolved) {
-            resolved = true;
-            resolve({ started: true, url: match[1] });
-          }
-        };
-        serverProcess!.stdout?.on('data', checkOutput);
-        serverProcess!.stderr?.on('data', checkOutput);
-
-        serverProcess!.on('error', () => {
-          if (!resolved) { resolved = true; resolve({ started: false, url: null }); }
-        });
-        serverProcess!.on('close', () => {
-          if (!resolved) { resolved = true; resolve({ started: false, url: null }); }
-        });
-        setTimeout(() => {
-          if (!resolved) { resolved = true; resolve({ started: true, url: null }); }
-        }, 5000);
-      });
-
-      if (!result.started) {
-        serverProcess = null;
-      }
-      finalUrl = result.url ?? (serverProcess ? fallbackUrl : null);
-    } catch (err: any) {
-      console.warn('Web preview server failed to start:', err.message);
-      serverProcess = null;
-    }
-    await ctx.send({ type: 'deploy_complete', target: 'web', ...(finalUrl ? { url: finalUrl } : {}) });
-    return { process: serverProcess, url: finalUrl };
+    await ctx.send({ type: 'deploy_complete', target: 'web', url: finalUrl });
+    return { process: null, url: finalUrl };
   }
 
   shouldDeployHardware(ctx: PhaseContext): boolean {

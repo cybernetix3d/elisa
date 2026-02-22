@@ -30,9 +30,9 @@ describe('apiClient', () => {
       expect(headers).toEqual({ 'Content-Type': 'application/json' });
     });
 
-    it('includes Authorization header when token is set', () => {
+    it('includes Authorization header when token is set', async () => {
       setAuthToken('test-token');
-      const headers = authHeaders();
+      const headers = await authHeaders();
       expect(headers).toEqual({
         'Content-Type': 'application/json',
         'Authorization': 'Bearer test-token',

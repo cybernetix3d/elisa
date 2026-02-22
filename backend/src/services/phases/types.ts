@@ -13,6 +13,8 @@ export interface PhaseContext {
   nuggetDir: string;
   nuggetType: string;
   abortSignal: AbortSignal;
+  apiKey?: string;
+  vercelToken?: string;
 }
 
 /** Shared helper: check for a teaching moment and send it if present. */

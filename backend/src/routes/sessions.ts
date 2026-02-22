@@ -11,6 +11,7 @@ import { AgentRunner } from '../services/agentRunner.js';
 import { SkillRunner } from '../services/skillRunner.js';
 import { NuggetSpecSchema } from '../utils/specValidator.js';
 import { validateWorkspacePath } from '../utils/pathValidator.js';
+import { supabase, type AuthenticatedRequest } from '../middleware/authMiddleware.js';
 import type { HardwareService } from '../services/hardwareService.js';
 import type { SessionStore } from '../services/sessionStore.js';
 import type { SkillSpec } from '../models/skillPlan.js';
@@ -46,6 +47,7 @@ export function createSessionRouter({ store, sendEvent, hardwareService }: Sessi
 
   // Start session
   router.post('/:id/start', async (req, res) => {
+    const authReq = req as AuthenticatedRequest;
     const entry = store.get(req.params.id);
     if (!entry) { res.status(404).json({ detail: 'Session not found' }); return; }
 
@@ -74,6 +76,23 @@ export function createSessionRouter({ store, sendEvent, hardwareService }: Sessi
     const spec = parseResult.data;
     entry.session.spec = spec;
 
+    // Fetch user's API key and Vercel token
+    let apiKey: string | undefined = undefined;
+    let vercelToken: string | undefined = undefined;
+    if (authReq.user && authReq.user.id !== 'local-dev-user') {
+      try {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('anthropic_api_key, vercel_token')
+          .eq('id', authReq.user.id)
+          .single();
+        if (data?.anthropic_api_key) apiKey = data.anthropic_api_key;
+        if (data?.vercel_token) vercelToken = data.vercel_token;
+      } catch (err) {
+        console.error('Failed to fetch user profiles:', err);
+      }
+    }
+
     // Pre-execute composite skills
     if (spec.skills?.length) {
       const agentRunner = new AgentRunner();
@@ -85,6 +104,7 @@ export function createSessionRouter({ store, sendEvent, hardwareService }: Sessi
               (evt) => sendEvent(req.params.id, evt),
               skills,
               agentRunner,
+              apiKey,
             );
             const plan = runner.interpretWorkspaceOnBackend(skill);
             const result = await runner.execute(plan);
@@ -139,6 +159,8 @@ export function createSessionRouter({ store, sendEvent, hardwareService }: Sessi
       (evt) => sendEvent(req.params.id, evt),
       hardwareService,
       workspacePath,
+      apiKey,
+      vercelToken,
     );
     entry.orchestrator = orchestrator;
 

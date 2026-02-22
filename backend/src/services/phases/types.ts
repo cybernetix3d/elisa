@@ -15,6 +15,7 @@ export interface PhaseContext {
   abortSignal: AbortSignal;
   apiKey?: string;
   vercelToken?: string;
+  appEnvVars?: Record<string, string>;
 }
 
 /** Shared helper: check for a teaching moment and send it if present. */

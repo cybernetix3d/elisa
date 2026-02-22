@@ -38,6 +38,7 @@ export class Orchestrator {
   private userWorkspace: boolean;
   private apiKey?: string;
   private vercelToken?: string;
+  private appEnvVars?: Record<string, string>;
 
   // Cancellation
   private abortController = new AbortController();
@@ -65,13 +66,14 @@ export class Orchestrator {
   private testPhase: TestPhase;
   private deployPhase: DeployPhase;
 
-  constructor(session: BuildSession, sendEvent: SendEvent, hardwareService?: HardwareService, workspacePath?: string, apiKey?: string, vercelToken?: string) {
+  constructor(session: BuildSession, sendEvent: SendEvent, hardwareService?: HardwareService, workspacePath?: string, apiKey?: string, vercelToken?: string, appEnvVars?: Record<string, string>) {
     this.session = session;
     this.send = sendEvent;
     this.nuggetDir = workspacePath || path.join(os.tmpdir(), `elisa-nugget-${session.id}`);
     this.userWorkspace = !!workspacePath;
     this.apiKey = apiKey;
     this.vercelToken = vercelToken;
+    this.appEnvVars = appEnvVars;
     this.hardwareService = hardwareService ?? new HardwareService();
     this.portalService = new PortalService(this.hardwareService);
 
@@ -94,6 +96,7 @@ export class Orchestrator {
       abortSignal: this.abortController.signal,
       apiKey: this.apiKey,
       vercelToken: this.vercelToken,
+      appEnvVars: this.appEnvVars,
     };
   }
 

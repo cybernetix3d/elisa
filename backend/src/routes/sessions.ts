@@ -76,18 +76,20 @@ export function createSessionRouter({ store, sendEvent, hardwareService }: Sessi
     const spec = parseResult.data;
     entry.session.spec = spec;
 
-    // Fetch user's API key and Vercel token
+    // Fetch user's API key, Vercel token, and App Env Vars
     let apiKey: string | undefined = undefined;
     let vercelToken: string | undefined = undefined;
+    let appEnvVars: Record<string, string> | undefined = undefined;
     if (authReq.user && authReq.user.id !== 'local-dev-user') {
       try {
         const { data } = await supabase
           .from('user_profiles')
-          .select('anthropic_api_key, vercel_token')
+          .select('anthropic_api_key, vercel_token, app_env_vars')
           .eq('id', authReq.user.id)
           .single();
         if (data?.anthropic_api_key) apiKey = data.anthropic_api_key;
         if (data?.vercel_token) vercelToken = data.vercel_token;
+        if (data?.app_env_vars) appEnvVars = data.app_env_vars;
       } catch (err) {
         console.error('Failed to fetch user profiles:', err);
       }
@@ -161,6 +163,7 @@ export function createSessionRouter({ store, sendEvent, hardwareService }: Sessi
       workspacePath,
       apiKey,
       vercelToken,
+      appEnvVars,
     );
     entry.orchestrator = orchestrator;
 

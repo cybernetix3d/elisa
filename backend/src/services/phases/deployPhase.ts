@@ -94,7 +94,14 @@ export class DeployPhase {
       try {
         const isWin = process.platform === 'win32';
         const vercelUrl = await new Promise<string>((resolve, reject) => {
-          const vProc = spawn('npx', ['vercel', '--yes', '--prod', `--token=${ctx.vercelToken}`], {
+          const vercelArgs = ['vercel', '--yes', '--prod', `--token=${ctx.vercelToken}`];
+          if (ctx.appEnvVars) {
+            for (const [key, value] of Object.entries(ctx.appEnvVars)) {
+              vercelArgs.push('--build-env', `${key}=${value}`, '--env', `${key}=${value}`);
+            }
+          }
+
+          const vProc = spawn('npx', vercelArgs, {
             cwd: ctx.nuggetDir,
             stdio: 'pipe',
             shell: isWin,

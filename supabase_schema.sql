@@ -12,6 +12,10 @@ CREATE TABLE public.user_profiles (
     anthropic_api_key TEXT,
     preferred_model TEXT DEFAULT 'claude-opus-4-6',
     vercel_token TEXT,
+    global_skills JSONB DEFAULT '[]'::jsonb,
+    global_rules JSONB DEFAULT '[]'::jsonb,
+    global_portals JSONB DEFAULT '[]'::jsonb,
+    app_env_vars JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );

@@ -88,15 +88,32 @@ export default function App() {
       setAuthToken('dev-token');
     }
 
+    const syncProfilePreferences = async (userId: string) => {
+      try {
+        const { data } = await supabase.from('user_profiles')
+          .select('global_skills, global_rules, global_portals')
+          .eq('id', userId).single();
+        if (data) {
+          if (data.global_skills && data.global_skills.length > 0) setSkills(data.global_skills);
+          if (data.global_rules && data.global_rules.length > 0) setRules(data.global_rules);
+          if (data.global_portals && data.global_portals.length > 0) setPortals(data.global_portals);
+        }
+      } catch (err) {
+        console.error('Failed to fetch global preferences', err);
+      }
+    };
+
     // Set up Supabase auth listener
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSupabaseSession(session);
+      if (session) syncProfilePreferences(session.user.id);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSupabaseSession(session);
+      if (session) syncProfilePreferences(session.user.id);
     });
 
     return () => subscription.unsubscribe();
@@ -160,18 +177,33 @@ export default function App() {
     setCurrentToast(null);
   }, []);
 
-  // Persist skills/rules to localStorage on change
+  const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    isInitialMount.current = false;
+  }, []);
+
+  // Persist skills/rules to localStorage on change, and sync to Supabase
   useEffect(() => {
     localStorage.setItem(LS_SKILLS, JSON.stringify(skills));
-  }, [skills]);
+    if (!isInitialMount.current && supabaseSession && !isElectron) {
+      supabase.from('user_profiles').update({ global_skills: skills }).eq('id', supabaseSession.user.id).then();
+    }
+  }, [skills, supabaseSession, isElectron]);
 
   useEffect(() => {
     localStorage.setItem(LS_RULES, JSON.stringify(rules));
-  }, [rules]);
+    if (!isInitialMount.current && supabaseSession && !isElectron) {
+      supabase.from('user_profiles').update({ global_rules: rules }).eq('id', supabaseSession.user.id).then();
+    }
+  }, [rules, supabaseSession, isElectron]);
 
   useEffect(() => {
     localStorage.setItem(LS_PORTALS, JSON.stringify(portals));
-  }, [portals]);
+    if (!isInitialMount.current && supabaseSession && !isElectron) {
+      supabase.from('user_profiles').update({ global_portals: portals }).eq('id', supabaseSession.user.id).then();
+    }
+  }, [portals, supabaseSession, isElectron]);
 
   // Re-interpret workspace when skills/rules/portals change (without Blockly interaction)
   useEffect(() => {
